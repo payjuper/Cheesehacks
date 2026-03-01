@@ -119,6 +119,7 @@ export default function ProjectsList() {
               <span>No projects match your search.</span>
             </div>
           ) : (
+            
             filtered.map((p, i) => (
               <ProjectCard key={p.id} project={p} animDelay={0.03 + i * 0.04} />
             ))

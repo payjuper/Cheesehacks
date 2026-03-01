@@ -262,7 +262,7 @@ export default function ProfilePage() {
           ...payload 
         }));
         setIsEditOpen(false); 
-        alert("성공적으로 저장되었습니다!");
+        alert("saved!");
       }
     } catch (err) {
       console.error("❌ 알 수 없는 에러:", err);
@@ -412,7 +412,7 @@ export default function ProfilePage() {
             <div className="pp-card-body" style={{ padding: "12px 16px" }}>
               {applications.length === 0 ? (
                 <div className="pp-empty">
-                  <span>지원한 프로젝트가 없습니다.</span>
+                  <span>Start Applying Today!</span>
                 </div>
               ) : (
                 <div className="pp-proj-list">
@@ -423,9 +423,9 @@ export default function ProfilePage() {
                       </div>
                       <div className="pp-proj-info">
                         <div className="pp-proj-title">{app.title}</div>
-                        <div className="pp-proj-desc">지원 포지션: {app.role_name}</div>
+                        <div className="pp-proj-desc">Applied for: {app.role_name}</div>
                         <div className="pp-proj-tags">
-                          <span className="pp-proj-tag tag-ai">상태: {app.status}</span>
+                          <span className="pp-proj-tag tag-ai">{app.status}</span>
                         </div>
                       </div>
                     </a>

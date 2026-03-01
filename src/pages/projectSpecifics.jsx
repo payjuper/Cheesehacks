@@ -37,11 +37,9 @@ const styles = `
   .role-card-hover:hover { border-color: #d0ccc6 !important; box-shadow: 0 4px 24px rgba(0,0,0,0.07) !important; transform: translateY(-3px); }
   .join-btn-base:hover:not(:disabled):not(.applied) { background: #E14141 !important; color: #fff !important; border-color: #E14141 !important; }
   .wishlist-base:hover { border-color: #E14141 !important; color: #E14141 !important; }
-  .view-btn-el:hover { opacity: 0.88; transform: scale(1.02); }
   .ps-loading { display: flex; align-items: center; justify-content: center; padding: 80px 0; color: var(--muted); font-size: 15px; font-weight: bold; }
 `;
 
-// ── Icons ──────────────────────────────────────────────
 const HeartIcon = ({ filled }) => (
   <svg viewBox="0 0 24 24" width={15} height={15} fill={filled ? "#E14141" : "none"} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ transition: "fill 0.2s, transform 0.2s", transform: filled ? "scale(1.15)" : "scale(1)" }}>
     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
@@ -54,7 +52,6 @@ const DefaultTechSvg = () => (
   </svg>
 );
 
-// ── Stack item ─────────────────────────────────────────
 function StackItem({ name }) {
   return (
     <div className="stack-item" style={{
@@ -72,12 +69,11 @@ function StackItem({ name }) {
   );
 }
 
-// ── Role card ──────────────────────────────────────────
 const roleColors = {
-  fe: { bg: "#EEF4FF", stroke: "#3B6FE0", dot: "#3B6FE0" },
-  ml: { bg: "#FFF0F0", stroke: "#E14141", dot: "#E14141" },
-  ds: { bg: "#F0FFF4", stroke: "#2E8B57", dot: "#2E8B57" },
-  ux: { bg: "#FFF8EE", stroke: "#E07B20", dot: "#E07B20" },
+  fe: { bg: "#EEF4FF", stroke: "#3B6FE0" },
+  ml: { bg: "#FFF0F0", stroke: "#E14141" },
+  ds: { bg: "#F0FFF4", stroke: "#2E8B57" },
+  ux: { bg: "#FFF8EE", stroke: "#E07B20" },
 };
 
 function RoleIcon({ type }) {
@@ -96,7 +92,6 @@ function RoleIcon({ type }) {
 }
 
 function RoleCard({ role, index, hasApplied, onApply, animClass }) {
-  // UI 디자인을 위해 순서대로 색상을 돌려씁니다.
   const types = ['fe', 'ml', 'ds', 'ux'];
   const type = types[index % types.length];
   const isFull = role.is_closed;
@@ -121,6 +116,9 @@ function RoleCard({ role, index, hasApplied, onApply, animClass }) {
 
       <div>
         <p style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>{role.role_name}</p>
+        {role.required_skills && (
+          <p style={{ fontSize: 11, color: '#999990', fontWeight: 400, lineHeight: 1.5 }}>{role.required_skills}</p>
+        )}
       </div>
 
       <div style={{ flexGrow: 1 }} />
@@ -142,18 +140,16 @@ function RoleCard({ role, index, hasApplied, onApply, animClass }) {
   );
 }
 
-// ── Main page ──────────────────────────────────────────
 export default function ProjectSpecifics() {
-  const { id } = useParams(); // 라우터에서 프로젝트 ID 가져오기
+  const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [appliedRoles, setAppliedRoles] = useState(new Set());
   const [saved, setSaved] = useState(false);
 
-  // 💡 DB에서 프로젝트 상세 정보 가져오기 (영교님 핵심 로직 부활!)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -163,14 +159,13 @@ export default function ProjectSpecifics() {
 
         const { data, error } = await supabase
           .from('projects')
-          .select(`*, profiles ( id, school_email ), project_roles ( id, role_name, is_closed )`)
+          .select(`*, profiles ( id, school_email ), project_roles ( id, role_name, is_closed, required_skills )`)
           .eq('id', id)
           .single();
 
         if (error) throw error;
         setProject(data);
 
-        // 이미 지원한 포지션인지 체크
         if (user && data.project_roles?.length > 0) {
           const roleIds = data.project_roles.map(r => r.id);
           const { data: appliedData } = await supabase
@@ -184,8 +179,8 @@ export default function ProjectSpecifics() {
           }
         }
       } catch (error) {
-        console.error('글 상세정보 에러:', error);
-        alert('존재하지 않거나 삭제된 프로젝트입니다.');
+        console.error('Error fetching project:', error);
+        alert('This project does not exist or has been deleted.');
         navigate('/');
       } finally {
         setLoading(false);
@@ -194,22 +189,21 @@ export default function ProjectSpecifics() {
     fetchData();
   }, [id, navigate]);
 
-  // 💡 지원하기 로직
   const handleApply = async (roleId, roleName) => {
     if (!currentUser) {
-      alert('지원하시려면 먼저 로그인을 해주세요!');
+      alert('Please log in to apply!');
       navigate('/login');
       return;
     }
     const { error } = await supabase.from('applications').insert([{
-      role_id: roleId, applicant_id: currentUser.id, message: "함께하고 싶습니다!", status: "pending"
+      role_id: roleId, applicant_id: currentUser.id, message: "I'd love to join!", status: "pending"
     }]);
 
     if (error) {
-      if (error.code === '23505') alert('이미 지원한 포지션입니다!');
-      else alert('지원 처리 중 오류가 발생했습니다: ' + error.message);
+      if (error.code === '23505') alert('You have already applied for this position!');
+      else alert('Error submitting application: ' + error.message);
     } else {
-      alert(`[${roleName}] 포지션에 성공적으로 지원했습니다! 프로필에서 확인하세요.`);
+      alert(`Successfully applied for [${roleName}]! Check your profile to see the status.`);
       setAppliedRoles(prev => new Set(prev).add(roleId));
     }
   };
@@ -217,7 +211,7 @@ export default function ProjectSpecifics() {
   if (loading) return <div className="ps-root ps-loading"><style>{styles}</style>Loading project details...</div>;
   if (!project) return null;
 
-  const authorEmail = project.profiles?.school_email || '익명 유저';
+  const authorEmail = project.profiles?.school_email || 'Anonymous';
   const authorName = authorEmail.split('@')[0];
   const techStacksArray = project.tech_stacks ? project.tech_stacks.split(',').map(t => t.trim()) : [];
 
@@ -226,11 +220,9 @@ export default function ProjectSpecifics() {
       <style>{styles}</style>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
 
-        {/* Hero card */}
         <section style={{ display: "flex", alignItems: "flex-start", width: "100%", maxWidth: 860, padding: "48px 40px 0" }}>
           <div className="rise" style={{ background: "#fff", border: "1px solid #E8E5E0", borderRadius: 28, width: "100%", padding: "52px 52px 44px", boxShadow: "0 8px 48px rgba(0,0,0,0.06)" }}>
-            
-            {/* Top row */}
+
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 30, flexWrap: "wrap", gap: 12 }}>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", padding: "5px 13px", borderRadius: 100, border: "1.5px solid #111", background: "#111", color: "#fff" }}>
@@ -242,7 +234,6 @@ export default function ProjectSpecifics() {
               </button>
             </div>
 
-            {/* Title & description */}
             <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 42, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: 16 }}>
               {project.title}
             </h1>
@@ -252,7 +243,6 @@ export default function ProjectSpecifics() {
 
             <div style={{ height: 1, background: "#E8E5E0", marginBottom: 30 }} />
 
-            {/* Tech stack */}
             <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "#999990", marginBottom: 14 }}>
               Tech Stack
             </p>
@@ -262,7 +252,6 @@ export default function ProjectSpecifics() {
               )) : <span style={{ fontSize: 13, color: "#999" }}>Not specified</span>}
             </div>
 
-            {/* Footer */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 34, paddingTop: 24, borderTop: "1px solid #E8E5E0", flexWrap: "wrap", gap: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#E14141", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>
@@ -278,23 +267,22 @@ export default function ProjectSpecifics() {
           </div>
         </section>
 
-        {/* Role cards (동적 생성) */}
         <div style={{ width: "100%", maxWidth: 860, padding: "28px 40px 80px", alignSelf: "flex-start" }}>
           <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, marginBottom: 16, color: "#111" }}>Open Positions</h3>
           <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 10, msOverflowStyle: "none", scrollbarWidth: "none" }}>
             {project.project_roles && project.project_roles.length > 0 ? (
               project.project_roles.map((role, idx) => (
-                <RoleCard 
-                  key={role.id} 
-                  role={role} 
-                  index={idx} 
-                  hasApplied={appliedRoles.has(role.id)} 
-                  onApply={handleApply} 
-                  animClass={`rise-${(idx % 4) + 1}`} 
+                <RoleCard
+                  key={role.id}
+                  role={role}
+                  index={idx}
+                  hasApplied={appliedRoles.has(role.id)}
+                  onApply={handleApply}
+                  animClass={`rise-${(idx % 4) + 1}`}
                 />
               ))
             ) : (
-              <p style={{ color: "#999", fontSize: 14 }}>등록된 포지션이 없습니다.</p>
+              <p style={{ color: "#999", fontSize: 14 }}>No open positions listed.</p>
             )}
           </div>
         </div>

@@ -6,8 +6,9 @@ import SectionBasics from "../components/NewProjectComponents/SectionBasics";
 import SectionDuration from "../components/NewProjectComponents/SectionDuration";
 import SectionTags from "../components/NewProjectComponents/SectionTags";
 import SectionTechStack from "../components/NewProjectComponents/SectionTechStack";
+import SectionRoles from "../components/NewProjectComponents/SectionRoles";
 
-const STEPS = ["Basics", "Duration", "Tags", "Tech Stack"];
+const STEPS = ["Basics", "Duration", "Tags", "Tech Stack", "Roles"];
 
 export default function NewProject() {
   const navigate = useNavigate();
@@ -21,12 +22,14 @@ export default function NewProject() {
   const [selectedTech, setSelectedTech] = useState([]);
   const [previews, setPreviews]         = useState([]);
   const [toast, setToast]               = useState(false);
+  const [roles, setRoles]               = useState([]);
 
   const completedSections = [
     title.trim().length > 0 && desc.trim().length > 0,
     startDate.length > 0 && endDate.length > 0,
     selectedTags.length > 0 || customTags.length > 0,
     selectedTech.length > 0,
+    roles.length > 0,
   ];
 
   const handleSubmit = async () => {
@@ -64,6 +67,18 @@ export default function NewProject() {
       return;
     }
 
+    if (data && data[0] && roles.length > 0) {
+      const projectId = data[0].id;
+      const { error: rolesError } = await supabase.from('project_roles').insert(
+        roles.map(r => ({ ...r, project_id: projectId }))
+      );
+      if (rolesError) {
+        console.error("Roles save failed:", rolesError);
+        alert("Project saved but roles failed: " + rolesError.message);
+        return;
+      }
+    }
+
     setToast(true);
 
     setTimeout(() => {
@@ -72,11 +87,10 @@ export default function NewProject() {
     }, 1500);
   };
 
-  
-return (
-  <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "var(--bg)" }}>
-    <style>{style}</style>
-    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+  return (
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "var(--bg)" }}>
+      <style>{style}</style>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div className="np-topbar">
           <div className="np-topbar-left">
             <h1>New Project</h1>
@@ -124,6 +138,9 @@ return (
             />
             <SectionTechStack
               selectedTech={selectedTech} setSelectedTech={setSelectedTech}
+            />
+            <SectionRoles
+              roles={roles} setRoles={setRoles}
             />
           </div>
         </div>
