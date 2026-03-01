@@ -91,9 +91,9 @@ export default function ProjectCard({ project, animDelay }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             {(project.start_date || project.end_date) && (
               <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 400, whiteSpace: 'nowrap' }}>
-                {project.start_date ? new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?'}
-                {' → '}
-                {project.end_date ? new Date(project.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?'}
+                {project.start_date ? new Date(project.start_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?'}
+{' → '}
+{project.end_date ? new Date(project.end_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?'}
               </span>
             )}
             <button className={`wl-btn${saved ? " saved" : ""}`} onClick={toggleSave}>
