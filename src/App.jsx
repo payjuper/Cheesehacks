@@ -7,6 +7,7 @@ import ProjectSpecifics from "./pages/ProjectSpecifics";
 import NewProject from "./pages/NewProject";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 
 function RequireAuth({ children }) {
   const [user, setUser] = useState(undefined);
@@ -25,6 +26,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route element={<Layout />}>
           <Route path="/" element={<ProjectsList />} />
           <Route path="project/:id" element={<ProjectSpecifics />} />
