@@ -1,22 +1,38 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "./supabaseClient";
 import Layout from "./components/Layout";
 import ProjectsList from "./pages/ProjectsList";
 import ProjectSpecifics from "./pages/ProjectSpecifics";
 import NewProject from "./pages/NewProject";
 import ProfilePage from "./pages/ProfilePage";
+import LoginPage from "./pages/LoginPage";
+
+function RequireAuth({ children }) {
+  const [user, setUser] = useState(undefined);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+  }, []);
+
+  if (user === undefined) return null; // still loading
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+}
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
         <Route element={<Layout />}>
           <Route path="/" element={<ProjectsList />} />
           <Route path="project/:id" element={<ProjectSpecifics />} />
           <Route path="new" element={<NewProject />} />
-          <Route path="profile/me" element={<ProfilePage />} />
-          <Route path="profile/:id" element={<ProfilePage />} />
+          <Route path="profile/me" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          <Route path="profile/:id" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
