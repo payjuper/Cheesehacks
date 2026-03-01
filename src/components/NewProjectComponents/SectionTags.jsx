@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { PRESET_TAGS } from "./styles";
 
-export default function SectionTags({ selectedTags, setSelectedTags, customTags, setCustomTags }) {
+export default function SectionTags({
+    selectedTags,
+  setSelectedTags,
+  customTags,
+  setCustomTags,
+  categoryOptions = [],
+}) {
   const [customTagInput, setCustomTagInput] = useState("");
 
   const toggleTag = (id) =>
@@ -27,18 +32,20 @@ export default function SectionTags({ selectedTags, setSelectedTags, customTags,
       </div>
 
       <div className="tags-grid">
-        {PRESET_TAGS.map(t => (
+        {categoryOptions.map((category) => (
           <button
-            key={t.id}
-            className={`tag-toggle${selectedTags.includes(t.id) ? " " + t.cls : ""}`}
-            onClick={() => toggleTag(t.id)}
+           key={category}
+            className={`tag-toggle${selectedTags.includes(category) ? " sel-custom" : ""}`}
+            onClick={() => toggleTag(category)}
           >
-            {t.label}
+            {category}
           </button>
         ))}
+
         {customTags.map(t => (
           <button
             key={t}
+            type="button"
             className="tag-toggle sel-custom"
             onClick={() => removeCustomTag(t)}
             title="Click to remove"
@@ -55,11 +62,19 @@ export default function SectionTags({ selectedTags, setSelectedTags, customTags,
           placeholder="Add custom tag…"
           value={customTagInput}
           onChange={e => setCustomTagInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && addCustomTag()}
+          onKeyDown={e => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addCustomTag();
+            }
+          }}
           maxLength={24}
         />
-        <button className="tag-add-btn" onClick={addCustomTag}>
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <button className="tag-add-btn" type="button" onClick={addCustomTag}>
+          <svg viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           Add
         </button>
       </div>

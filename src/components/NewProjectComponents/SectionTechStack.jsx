@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ALL_TECH } from "./styles";
 
 function TechDot({ color }) {
   return (
@@ -10,17 +9,23 @@ function TechDot({ color }) {
   );
 }
 
-export default function SectionTechStack({ selectedTech, setSelectedTech }) {
+export default function SectionTechStack({ selectedTech, setSelectedTech, availableTech = [] }) {
   const [techSearch, setTechSearch] = useState("");
 
-  const filteredTech = ALL_TECH.filter(t =>
+  const techOptions = availableTech.map((name) => ({
+    id: name,
+    name,
+    color: "#999990",
+  }));
+
+  const filteredTech = techOptions.filter(t =>
     t.name.toLowerCase().includes(techSearch.toLowerCase())
   );
 
   const toggleTech = (id) =>
     setSelectedTech(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
 
-  const selectedTechObjs = ALL_TECH.filter(t => selectedTech.includes(t.id));
+  const selectedTechObjs = techOptions.filter(t => selectedTech.includes(t.id));
 
   return (
     <div className="form-section">

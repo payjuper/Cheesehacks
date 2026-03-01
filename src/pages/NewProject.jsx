@@ -7,6 +7,28 @@ import SectionTechStack from "../components/NewProjectComponents/SectionTechStac
 
 const STEPS = ["Basics", "Tags", "Tech Stack"];
 
+const AVAILABLE_TECH = [
+  "JavaScript", "TypeScript", "React", "Vue", "Next.js", "Node.js",
+  "Java", "Spring", "Python", "Django", "Ruby", "Ruby on Rails",
+  "C++", "C#", "Go", "Rust", "Swift", "Kotlin", "Flutter", "React Native",
+  "SQL", "MySQL", "PostgreSQL", "MongoDB", "GraphQL",
+  "AWS", "Docker", "Kubernetes", "Firebase",
+  "Figma", "UI/UX", "Unity", "Unreal Engine",
+];
+
+const CATEGORY_OPTIONS = [
+  "Web Development",
+  "Mobile App",
+  "AI / Machine Learning",
+  "Game Development",
+  "Data Science & Analytics",
+  "Cyber Security",
+  "Blockchain & Web3",
+  "Hardware & IoT",
+  "UI/UX Design",
+  "Business & Startup",
+];
+
 export default function NewProject() {
   const [title, setTitle]               = useState("");
   const [desc, setDesc]                 = useState("");
@@ -30,8 +52,10 @@ export default function NewProject() {
       description: desc,
       tags: [...selectedTags, ...customTags],
       images: previews,
-      stack: selectedTech.map(id => ({ name: id })),
-      contributors: user ? [{ initials: user.email.slice(0, 2).toUpperCase(), color: "#E14141" }] : [],
+      stack: selectedTech.map(name => ({ name })),
+      contributors: user
+        ? [{ initials: user.email.slice(0, 2).toUpperCase(), color: "#E14141" }]
+        : [],
       lead: user?.email ?? "",
     });
 
@@ -47,6 +71,7 @@ export default function NewProject() {
   return (
     <div>
       <style>{style}</style>
+
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div className="np-topbar">
           <div className="np-topbar-left">
@@ -54,8 +79,8 @@ export default function NewProject() {
             <p>Fill in the details to publish your project for collaborators.</p>
           </div>
           <div className="np-topbar-actions">
-            <button className="btn-ghost">Discard</button>
-            <button className="btn-primary" onClick={handleSubmit}>
+            <button className="btn-ghost" type="button">Discard</button>
+            <button className="btn-primary" type="button" onClick={handleSubmit}>
               <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
               Publish Project
             </button>
@@ -64,16 +89,40 @@ export default function NewProject() {
 
         <div className="np-steps">
           {STEPS.map((label, i) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", flex: i < STEPS.length - 1 ? 1 : "none" }}>
+            <div
+              key={label}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flex: i < STEPS.length - 1 ? 1 : "none",
+              }}
+            >
               <div className={`step${completedSections[i] ? " done" : ""}`}>
                 <div className="step-dot">
-                  {completedSections[i]
-                    ? <svg viewBox="0 0 24 24" style={{ width: 10, height: 10, stroke: "#fff", fill: "none", strokeWidth: 3, strokeLinecap: "round", strokeLinejoin: "round" }}><polyline points="20 6 9 17 4 12" /></svg>
-                    : i + 1}
+                  {completedSections[i] ? (
+                    <svg
+                      viewBox="0 0 24 24"
+                      style={{
+                        width: 10,
+                        height: 10,
+                        stroke: "#fff",
+                        fill: "none",
+                        strokeWidth: 3,
+                        strokeLinecap: "round",
+                        strokeLinejoin: "round",
+                      }}
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    i + 1
+                  )}
                 </div>
                 <span>{label}</span>
               </div>
-              {i < STEPS.length - 1 && <div className={`step-line${completedSections[i] ? " done" : ""}`} />}
+              {i < STEPS.length - 1 && (
+                <div className={`step-line${completedSections[i] ? " done" : ""}`} />
+              )}
             </div>
           ))}
         </div>
@@ -85,12 +134,16 @@ export default function NewProject() {
               desc={desc} setDesc={setDesc}
               previews={previews} setPreviews={setPreviews}
             />
+
             <SectionTags
               selectedTags={selectedTags} setSelectedTags={setSelectedTags}
               customTags={customTags} setCustomTags={setCustomTags}
+              categoryOptions={CATEGORY_OPTIONS}
             />
+
             <SectionTechStack
               selectedTech={selectedTech} setSelectedTech={setSelectedTech}
+              availableTech={AVAILABLE_TECH}
             />
           </div>
         </div>
