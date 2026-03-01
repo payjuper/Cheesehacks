@@ -25,7 +25,7 @@ export default function SectionTechStack({ selectedTech, setSelectedTech }) {
   return (
     <div className="form-section">
       <div className="section-header">
-        <div className="section-num">3</div>
+        <div className="section-num">4</div>
         <div>
           <div className="section-title">Tech Stack</div>
           <div className="section-sub">Select the technologies used in this project</div>

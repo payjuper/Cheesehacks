@@ -19,7 +19,7 @@ export default function SectionTags({ selectedTags, setSelectedTags, customTags,
   return (
     <div className="form-section">
       <div className="section-header">
-        <div className="section-num">2</div>
+        <div className="section-num">3</div>
         <div>
           <div className="section-title">Tags</div>
           <div className="section-sub">Select categories or create custom tags</div>

@@ -146,6 +146,49 @@ export const style = `
     .topbar, .cards-col, .filter-row, .result-count { padding-left: 16px; padding-right: 16px; }
     .card-left { width: 110px; min-width: 110px; }
   }
+
+  /* New Project */
+  .np-topbar { padding: 36px 48px 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .np-topbar-left h1 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .np-topbar-left p { margin-top: 6px; font-size: 14px; font-weight: 300; color: var(--muted); }
+  .np-topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn-ghost { background: none; border: 1.5px solid var(--border); border-radius: 12px; padding: 9px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+  .btn-ghost:hover { border-color: #bbb; color: var(--text); }
+  .btn-primary { background: var(--red); border: none; border-radius: 12px; padding: 9px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 7px; box-shadow: 0 4px 14px rgba(225,65,65,0.28); transition: all 0.18s; }
+  .btn-primary:hover { background: #d03232; transform: translateY(-1px); }
+  .btn-primary svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .np-steps { padding: 28px 48px 0; display: flex; align-items: center; }
+  .step { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .step-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--border); color: var(--muted); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .step.done .step-dot { background: var(--red); color: #fff; }
+  .step span { font-size: 12px; font-weight: 500; color: var(--muted); transition: color 0.2s; }
+  .step.done span { color: var(--text); }
+  .step-line { flex: 1; height: 1.5px; background: var(--border); margin: 0 10px; transition: background 0.2s; min-width: 24px; }
+  .step-line.done { background: var(--red); }
+
+  .np-body { padding: 24px 48px 80px; }
+  .np-form-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; display: flex; flex-direction: column; gap: 32px; box-shadow: 0 2px 14px rgba(0,0,0,0.04); }
+
+  .np-section { display: flex; flex-direction: column; gap: 14px; }
+  .np-section-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+  .np-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; }
+  .np-input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: border-color 0.18s, box-shadow 0.18s; }
+  .np-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(225,65,65,0.08); }
+  .np-input::placeholder { color: #ccc; }
+  .np-input[type="date"] { appearance: none; -webkit-appearance: none; color: var(--text); font-family: 'DM Sans', sans-serif; }
+  .np-input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; }
+  .np-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); outline: none; resize: vertical; min-height: 90px; transition: border-color 0.18s, box-shadow 0.18s; }
+  .np-textarea:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(225,65,65,0.08); }
+  .np-textarea::placeholder { color: #ccc; }
+
+  .np-section-divider { height: 1px; background: var(--border); }
+
+  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px); background: #111; color: #fff; font-size: 13px; font-weight: 500; padding: 12px 22px; border-radius: 100px; display: flex; align-items: center; gap: 8px; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 999; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 14px; height: 14px; stroke: #4ade80; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
 `;
 
 export const TAG_CLASS = {
