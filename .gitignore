@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# 환경 변수 파일 (보안상 매우 중요)
+.env
+.env.local
+.env.*.local
