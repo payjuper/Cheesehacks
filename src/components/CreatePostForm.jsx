@@ -2,180 +2,186 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
+// 💡 30개 이상의 통합된 최신 기술 스택 리스트 (프로필 페이지와 동일하게 사용)
+const AVAILABLE_TECH = [
+    'JavaScript', 'TypeScript', 'React', 'Vue', 'Next.js', 'Node.js', 
+    'Java', 'Spring', 'Python', 'Django', 'Ruby', 'Ruby on Rails',
+    'C++', 'C#', 'Go', 'Rust', 'Swift', 'Kotlin', 'Flutter', 'React Native',
+    'SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'GraphQL', 
+    'AWS', 'Docker', 'Kubernetes', 'Firebase',
+    'Figma', 'UI/UX', 'Unity', 'Unreal Engine'
+];
+
 export default function CreatePostForm() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const [categoryTag, setCategoryTag] = useState('Web'); // 기본 태그
-    const [roles, setRoles] = useState(['']); // 직군 입력창들을 담는 배열
+    const [categoryTag, setCategoryTag] = useState('Web Development');
+    const [roleInput, setRoleInput] = useState('');
+    const [roles, setRoles] = useState([]); 
+    
+    // 기술 스택 상태 관리 배열
+    const [selectedTech, setSelectedTech] = useState([]); 
     
     const navigate = useNavigate();
 
-    // 🚨 강력한 자물쇠 (Route Guard): 화면 켜질 때 비로그인 유저 차단 🚨
     useEffect(() => {
         const checkAuth = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                alert('팀원 모집글을 작성하려면 반드시 로그인이 필요합니다!');
-                navigate('/login'); // 비회원이면 로그인 페이지로 쫓아냄
+                alert('팀원 모집글을 작성하려면 로그인이 필요합니다!');
+                navigate('/login');
             }
         };
         checkAuth();
     }, [navigate]);
 
-    // 직군 입력창 내용 변경 핸들러
-    const handleRoleChange = (index, value) => {
-        const newRoles = [...roles];
-        newRoles[index] = value;
-        setRoles(newRoles);
+    const toggleTech = (tech) => {
+        if (selectedTech.includes(tech)) {
+            setSelectedTech(selectedTech.filter(t => t !== tech)); 
+        } else {
+            setSelectedTech([...selectedTech, tech]); 
+        }
     };
 
-    // 직군 입력창 추가 핸들러
-    const addRoleField = () => setRoles([...roles, '']);
+    const handleAddRole = (e) => {
+        e.preventDefault();
+        if (roleInput.trim() !== '') {
+            setRoles([...roles, roleInput.trim()]);
+            setRoleInput('');
+        }
+    };
 
-    // 직군 입력창 삭제 핸들러
-    const removeRoleField = (index) => {
-        setRoles(roles.filter((_, i) => i !== index));
+    const removeRole = (indexToRemove) => {
+        setRoles(roles.filter((_, index) => index !== indexToRemove));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // 1. 현재 로그인된 유저의 세션(신분증) 가져오기
         const { data: { session } } = await supabase.auth.getSession();
-        
-        // 만약 글 쓰는 도중에 로그아웃이 되었다면 차단
-        if (!session) {
-            alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
-            navigate('/login');
-            return;
-        }
+        if (!session) return;
 
-        const userId = session.user.id; // 현재 접속 중인 유저의 고유 ID 추출
+        if (roles.length === 0) return alert('최소 1개 이상의 모집 직군을 추가해주세요!');
 
-        // 빈 직군 입력값 제거
-        const validRoles = roles.filter(role => role.trim() !== '');
-        if (validRoles.length === 0) {
-            alert('최소 1개 이상의 모집 직군을 입력해주세요! (예: 프론트엔드)');
-            return;
-        }
-
-        // 2. projects 테이블에 본문 + "작성자 ID(author_id)" 데이터 삽입
         const { data: projectData, error: projectError } = await supabase
             .from('projects')
             .insert([{ 
-                title: title, 
-                content: content, 
-                category_tag: categoryTag,
-                author_id: userId // 🚨 핵심: 누가 썼는지 DB에 명시 🚨
+                title, 
+                content, 
+                category_tag: categoryTag, 
+                author_id: session.user.id,
+                tech_stacks: selectedTech.join(', ') // 콤마 문자열로 저장
             }])
             .select(); 
 
-        if (projectError) {
-            console.error('프로젝트 저장 에러:', projectError.message);
-            alert('글 저장에 실패했습니다.');
-            return;
-        }
+        if (projectError) return alert('글 저장 실패: ' + projectError.message);
 
-        const newProjectId = projectData[0].id; // 방금 생성된 프로젝트의 ID
-
-        // 3. project_roles 테이블에 직군 데이터들 삽입 (One-to-Many 관계 매핑)
-        const rolesToInsert = validRoles.map(roleName => ({
-            project_id: newProjectId,
+        const rolesToInsert = roles.map(roleName => ({
+            project_id: projectData[0].id,
             role_name: roleName
         }));
 
-        const { error: rolesError } = await supabase
-            .from('project_roles')
-            .insert(rolesToInsert);
-
-        if (rolesError) {
-            console.error('직군 저장 에러:', rolesError.message);
-            alert('직군 정보 저장 중 문제가 발생했습니다.');
-            return;
-        }
-
-        alert('프로젝트가 성공적으로 등록되었습니다!');
+        await supabase.from('project_roles').insert(rolesToInsert);
         navigate('/'); 
     };
 
     return (
-        <form onSubmit={handleSubmit} className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">새 프로젝트 팀원 모집</h2>
-            
-            <div className="space-y-5">
-                {/* 1. 카테고리 (태그) */}
-                <label className="block">
-                    <span className="text-gray-700 font-semibold">프로젝트 분야 (Tag)</span>
-                    <select 
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                        value={categoryTag}
-                        onChange={(e) => setCategoryTag(e.target.value)}
-                    >
-                        <option value="Web">Web Development</option>
-                        <option value="App">Mobile App</option>
-                        <option value="AI">AI / Machine Learning</option>
-                        <option value="Game">Game Development</option>
-                        <option value="Data">Data Science</option>
-                    </select>
-                </label>
-
-                {/* 2. 제목 */}
-                <label className="block">
-                    <span className="text-gray-700 font-semibold">프로젝트 제목</span>
-                    <input 
-                        type="text" 
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" 
-                        placeholder="예) Supabase를 활용한 매칭 서비스 기획"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        required
-                    />
-                </label>
-
-                {/* 3. 내용 */}
-                <label className="block">
-                    <span className="text-gray-700 font-semibold">프로젝트 개요 (Content)</span>
-                    <textarea 
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" 
-                        rows="5" 
-                        placeholder="어떤 프로젝트인가요? 어떤 사람을 찾고 있나요?"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        required
-                    ></textarea>
-                </label>
-
-                {/* 4. 동적 직군 추가 (Dynamic Role Fields) */}
-                <div className="block pt-4 border-t border-gray-200">
-                    <span className="text-gray-700 font-semibold mb-2 block">모집 역할군 (Roles)</span>
-                    {roles.map((role, index) => (
-                        <div key={index} className="flex space-x-2 mb-2">
-                            <input 
-                                type="text" 
-                                className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border"
-                                placeholder="예) React 프론트엔드 1명"
-                                value={role}
-                                onChange={(e) => handleRoleChange(index, e.target.value)}
-                                required
-                            />
-                            {roles.length > 1 && (
-                                <button type="button" onClick={() => removeRoleField(index)} className="px-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200">
-                                    삭제
-                                </button>
-                            )}
-                        </div>
-                    ))}
-                    <button type="button" onClick={addRoleField} className="mt-2 text-sm text-indigo-600 font-semibold hover:text-indigo-800">
-                        + 모집 역할군 추가하기
-                    </button>
+        <div className="ml-[64px] min-h-screen bg-[#F4F2EF] p-10 flex justify-center font-['DM_Sans',_sans-serif]">
+            <div className="w-full max-w-3xl rise">
+                <div className="mb-10">
+                    <h1 className="text-4xl font-extrabold text-[#111111] mb-2 font-['Syne',_sans-serif] tracking-tight">Post a Project</h1>
+                    <p className="text-[#999990] text-lg font-medium">Share your idea and find the right teammates.</p>
                 </div>
-            </div>
 
-            <div className="flex justify-end mt-8">
-                <button type="submit" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-md hover:bg-indigo-700 transition-colors">
-                    모집글 올리기
-                </button>
+                <form onSubmit={handleSubmit} className="bg-[#FFFFFF] border border-[#E8E5E0] rounded-2xl p-8 shadow-sm space-y-8">
+                    
+                    <div>
+                        <label className="block text-sm font-bold text-[#111111] mb-2 uppercase tracking-wider">Category</label>
+                        <select 
+                            value={categoryTag} onChange={(e) => setCategoryTag(e.target.value)}
+                            className="w-full p-4 bg-[#F4F2EF] border border-[#E8E5E0] rounded-xl font-medium focus:outline-none focus:border-[#E14141] transition-colors cursor-pointer"
+                        >
+                            <option value="Web Development">Web Development</option>
+                            <option value="Mobile App">Mobile App</option>
+                            <option value="AI / Machine Learning">AI / Machine Learning</option>
+                            <option value="Game Development">Game Development</option>
+                            <option value="Data Science & Analytics">Data Science & Analytics</option>
+                            <option value="Cyber Security">Cyber Security</option>
+                            <option value="Blockchain & Web3">Blockchain & Web3</option>
+                            <option value="Hardware & IoT">Hardware & IoT</option>
+                            <option value="UI/UX Design">UI/UX Design</option>
+                            <option value="Business & PM">Business & Startup</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-[#111111] mb-2 uppercase tracking-wider">Project Title</label>
+                        <input 
+                            type="text" value={title} onChange={(e) => setTitle(e.target.value)} required
+                            className="w-full p-4 bg-[#F4F2EF] border border-[#E8E5E0] rounded-xl text-lg font-bold focus:outline-none focus:border-[#E14141]"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-[#111111] mb-2 uppercase tracking-wider">Overview</label>
+                        <textarea 
+                            value={content} onChange={(e) => setContent(e.target.value)} required rows="5"
+                            className="w-full p-4 bg-[#F4F2EF] border border-[#E8E5E0] rounded-xl font-medium focus:outline-none focus:border-[#E14141] resize-none"
+                        ></textarea>
+                    </div>
+
+                    <div className="pt-6 border-t border-[#E8E5E0]">
+                        <label className="block text-sm font-bold text-[#111111] mb-3 uppercase tracking-wider">Required Tech Stacks</label>
+                        <div className="flex flex-wrap gap-2">
+                            {AVAILABLE_TECH.map(tech => {
+                                const isSelected = selectedTech.includes(tech);
+                                return (
+                                    <button
+                                        key={tech}
+                                        type="button"
+                                        onClick={() => toggleTech(tech)}
+                                        className={`px-4 py-2 rounded-full text-sm font-bold transition-all border ${
+                                            isSelected 
+                                            ? 'bg-[#FFF0F0] text-[#E14141] border-[#E14141] shadow-sm' 
+                                            : 'bg-[#F4F2EF] text-[#999990] border-[#E8E5E0] hover:border-gray-300 hover:text-gray-700'
+                                        }`}
+                                    >
+                                        {tech}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-[#E8E5E0]">
+                        <label className="block text-sm font-bold text-[#111111] mb-2 uppercase tracking-wider">Open Roles</label>
+                        <div className="flex gap-2 mb-4">
+                            <input 
+                                type="text" value={roleInput} onChange={(e) => setRoleInput(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleAddRole(e)}
+                                placeholder="E.g., Frontend React 1명"
+                                className="flex-1 p-3 bg-[#F4F2EF] border border-[#E8E5E0] rounded-xl focus:outline-none focus:border-[#E14141]"
+                            />
+                            <button type="button" onClick={handleAddRole} className="px-6 py-3 bg-[#111111] text-white font-bold rounded-xl hover:bg-gray-800 transition-colors">
+                                Add
+                            </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 min-h-[50px] p-4 bg-[#F4F2EF] border border-[#E8E5E0] rounded-xl border-dashed">
+                            {roles.length > 0 ? roles.map((role, idx) => (
+                                <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-[#111111] text-white rounded-lg font-bold text-sm">
+                                    {role}
+                                    <button type="button" onClick={() => removeRole(idx)} className="text-gray-400 hover:text-red-400">×</button>
+                                </div>
+                            )) : <span className="text-[#999990] text-sm font-medium">포지션을 추가해주세요.</span>}
+                        </div>
+                    </div>
+
+                    <div className="mt-10 flex justify-end">
+                        <button type="submit" className="px-10 py-4 bg-[#E14141] text-white font-bold text-lg rounded-xl hover:bg-red-700 transition-transform shadow-lg">
+                            Publish Project
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     );
 }
