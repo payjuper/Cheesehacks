@@ -83,63 +83,6 @@ const DockerSvg = () => (
   </svg>
 );
 
-// ── Sidebar ────────────────────────────────────────────
-function NavButton({ icon, label }) {
-  return (
-    <div className="nav-btn-el" style={{
-      width: 42, height: 42, borderRadius: 10,
-      background: "rgba(255,255,255,0.12)",
-      border: "1.5px solid rgba(255,255,255,0.18)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      cursor: "pointer", transition: "background 0.2s, transform 0.15s",
-      position: "relative",
-    }}>
-      {icon}
-      <span className="nav-tooltip" style={{
-        position: "absolute", left: "calc(100% + 14px)",
-        background: "#111", color: "#fff",
-        fontSize: 11, padding: "5px 10px", borderRadius: 6,
-        whiteSpace: "nowrap", opacity: 0, transform: "translateX(-6px)",
-        transition: "opacity 0.18s, transform 0.18s", pointerEvents: "none",
-      }}>
-        {label}
-        <span style={{
-          position: "absolute", right: "100%", top: "50%",
-          transform: "translateY(-50%)",
-          borderWidth: 5, borderStyle: "solid",
-          borderColor: "transparent #111 transparent transparent",
-          display: "block",
-        }}/>
-      </span>
-    </div>
-  );
-}
-
-function Sidebar() {
-  return (
-    <aside style={{
-      width: 64, background: "#E14141",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "space-between",
-      padding: "28px 0",
-      position: "fixed", top: 0, left: 0, height: "100vh",
-      zIndex: 100,
-    }}>
-      <div style={{
-        width: 34, height: 34,
-        border: "2px solid rgba(255,255,255,0.5)", borderRadius: 8,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "'Syne', sans-serif", fontSize: 14, color: "#fff",
-        userSelect: "none",
-      }}>P</div>
-      <nav style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
-        <NavButton icon={<HomeIcon />} label="Overview" />
-        <NavButton icon={<ProfileIcon />} label="Profile" />
-      </nav>
-    </aside>
-  );
-}
-
 // ── Stack item ─────────────────────────────────────────
 function StackItem({ icon, name }) {
   return (
@@ -263,10 +206,9 @@ export default function ProjectPage() {
     <>
       <style>{styles}</style>
       <div style={{ display: "flex", minHeight: "100vh", background: "#F4F2EF", fontFamily: "'DM Sans', sans-serif", color: "#111" }}>
-        <Sidebar />
 
         {/* Page content */}
-        <div style={{ marginLeft: 64, flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
 
           {/* Hero card */}
           <section style={{ display: "flex", alignItems: "flex-start", width: "100%", maxWidth: 860, padding: "48px 40px 0" }}>

@@ -145,46 +145,54 @@ const style = `
 `;
 
 function Sidebar() {
-  const navClass = ({ isActive }) =>
-    `nav-btn${isActive ? " active" : ""}`;
+    const navClass = ({ isActive }) =>
+        `nav-btn${isActive ? " active" : ""}`;
 
-  return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">P</div>
+    return (
+        <aside className="sidebar">
+            <div className="sidebar-logo">P</div>
 
-      <nav className="sidebar-nav">
-        <NavLink to="/" end className={navClass}>
-          <svg viewBox="0 0 24 24">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-          </svg>
-          <span className="tooltip">Projects</span>
-        </NavLink>
+            <nav className="sidebar-nav">
+                <NavLink to="/" end className={navClass}>
+                    <svg viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    <span className="tooltip">Projects</span>
+                </NavLink>
 
-        <NavLink to="/new" className={navClass}>
-          <svg viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span className="tooltip">New Project</span>
-        </NavLink>
-      </nav>
+                <NavLink to="/new" className={navClass}>
+                    <svg viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    <span className="tooltip">New Project</span>
+                </NavLink>
 
-      <div style={{ height: 42 }} />
-    </aside>
-  );
+                <NavLink to="/profile/me" className={navClass}>
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                    </svg>
+                    <span className="tooltip">Profile</span>
+                </NavLink>
+            </nav>
+
+            <div style={{ height: 42 }} />
+        </aside>
+    );
 }
 
 export default function Layout() {
-  return (
-    <div className="app-root">
-      <style>{style}</style>
-      <Sidebar />
-      <main className="main">
-        <Outlet />
-      </main>
-    </div>
-  );
+    return (
+        <div className="app-root">
+            <style>{style}</style>
+            <Sidebar />
+            <main className="main">
+                <Outlet />
+            </main>
+        </div>
+    );
 }

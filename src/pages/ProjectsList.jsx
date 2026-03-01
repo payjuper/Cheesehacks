@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
+
 const style = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap');
 
@@ -501,21 +502,6 @@ export default function ProjectsList() {
   return (
     <div className="pl-root">
       <style>{style}</style>
-
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-logo">P</div>
-        <nav className="sidebar-nav">
-          <a href="projects-list.html" className="nav-btn active">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            <span className="tooltip">Projects</span>
-          </a>
-          <a href="project-page.html" className="nav-btn">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="11" x2="12" y2="16"/></svg>
-            <span className="tooltip">About</span>
-          </a>
-        </nav>
-      </aside>
 
       {/* Main */}
       <div className="main">
