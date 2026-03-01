@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, Link } from "react-router-dom";
 
 const style = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap');
@@ -406,7 +407,8 @@ function ProjectCard({ project, animDelay }) {
   };
 
   return (
-    <a
+    <Link
+      to={`/project/${project.id}`}
       className="p-card"
       href="project-page.html"
       style={{ animationDelay: `${animDelay}s` }}
@@ -479,12 +481,13 @@ function ProjectCard({ project, animDelay }) {
           </div>
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
 
 // ── Main App ───────────────────────────────────────────────
 export default function ProjectsList() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
 
@@ -562,7 +565,7 @@ export default function ProjectsList() {
       </div>
 
       {/* FAB */}
-      <button className="fab">
+      <button className="fab" onClick={() => navigate("/new")}>
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <span className="fab-tooltip">New Project</span>
       </button>
