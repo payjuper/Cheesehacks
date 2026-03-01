@@ -8,8 +8,6 @@ export default function ProjectsList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
-  
-  // 💡 가짜 useProjects 대신 진짜 DB 상태 관리
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -30,10 +28,10 @@ export default function ProjectsList() {
         if (error) throw error;
 
         const mappedProjects = (data || []).map(p => {
-          const authorEmail = p.profiles?.school_email || '익명 유저';
+          const authorEmail = p.profiles?.school_email || 'Anonymous';
           const authorName = authorEmail.split('@')[0];
-          const stackArray = p.tech_stacks 
-            ? p.tech_stacks.split(',').map(t => ({ name: t.trim() })) 
+          const stackArray = p.tech_stacks
+            ? p.tech_stacks.split(',').map(t => ({ name: t.trim() }))
             : [];
 
           return {
@@ -44,14 +42,16 @@ export default function ProjectsList() {
             images: p.images || [],
             stack: stackArray,
             lead: authorName,
-            contributors: [ { initials: authorName.charAt(0).toUpperCase(), color: '#E14141' } ],
-            created_at: p.created_at
+            contributors: [{ initials: authorName.charAt(0).toUpperCase(), color: '#E14141' }],
+            created_at: p.created_at,
+            start_date: p.start_date,
+            end_date: p.end_date,
           };
         });
 
         setProjects(mappedProjects);
       } catch (err) {
-        console.error("데이터 불러오기 실패:", err);
+        console.error("Failed to fetch projects:", err);
         setError(true);
       } finally {
         setLoading(false);
@@ -61,7 +61,6 @@ export default function ProjectsList() {
     fetchProjects();
   }, []);
 
-  // 🚨 검색 필터링 후 무조건 '최신순'으로 강제 정렬
   const filtered = projects.filter(p => {
     const tagMatch = activeFilter === "All" || p.tags.includes(activeFilter);
     const q = search.toLowerCase().trim();
@@ -76,7 +75,6 @@ export default function ProjectsList() {
     <div className="pl-root">
       <style>{style}</style>
       <div className="main">
-        {/* Topbar */}
         <div className="topbar">
           <div className="topbar-left">
             <h1>Projects</h1>
@@ -97,7 +95,6 @@ export default function ProjectsList() {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="filter-row">
           {TAG_FILTERS.map(f => (
             <button
@@ -112,7 +109,6 @@ export default function ProjectsList() {
 
         <p className="result-count"><span>{filtered.length}</span> projects</p>
 
-        {/* Cards */}
         <div className="cards-col">
           {filtered.length === 0 ? (
             <div className="empty">
@@ -130,7 +126,6 @@ export default function ProjectsList() {
         </div>
       </div>
 
-      {/* 🚨 FAB 버튼: 친구의 App.jsx 라우터에 맞춰 "/new" 로 정확히 수정! */}
       <button className="fab" onClick={() => navigate("/new")}>
         <svg viewBox="0 0 24 24">
           <line x1="12" y1="5" x2="12" y2="19"/>
