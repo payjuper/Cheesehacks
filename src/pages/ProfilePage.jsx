@@ -1,10 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Feed from "../components/Feed";
 import Modal from "../components/Modal";
 import { supabase } from "../supabaseClient";
 
-// 💡 CreatePostForm과 100% 동일하게 통합된 기술 스택 리스트!
 const SKILL_OPTIONS = [
     'JavaScript', 'TypeScript', 'React', 'Vue', 'Next.js', 'Node.js', 
     'Java', 'Spring', 'Python', 'Django', 'Ruby', 'Ruby on Rails',
@@ -13,26 +12,12 @@ const SKILL_OPTIONS = [
     'AWS', 'Docker', 'Kubernetes', 'Firebase',
     'Figma', 'UI/UX', 'Unity', 'Unreal Engine'
 ];
+const INTEREST_OPTIONS = ['Web Dev', 'Mobile App', 'AI/ML', 'Game Dev', 'Data Science', 'Fintech', 'EdTech', 'Startup', 'Cyber Security', 'Blockchain'];
 
-const INTEREST_OPTIONS = ['Web Dev', 'Mobile App', 'AI/ML', 'Game Dev', 'Data Science', 'Cyber Security', 'Blockchain & Web3', 'Hardware & IoT', 'UI/UX Design', 'Business & PM'];
+const fallbackProfile = { id: "unknown-user", school_email: "unknown@school.edu", manner_temp: 50, github_url: "", linkedin_url: "", avatar_url: "https://www.gravatar.com/avatar/?d=mp&s=300" };
 
-const fallbackProfile = {
-  id: "unknown-user",
-  school_email: "unknown@school.edu",
-  manner_temp: 50,
-  github_url: "",
-  linkedin_url: "",
-  avatar_url: "https://www.gravatar.com/avatar/?d=mp&s=300", 
-};
-
-function isUuid(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value));
-}
-
-function clamp01to100(n) {
-  return Math.max(0, Math.min(100, Number(n) || 50));
-}
-
+function isUuid(value) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value)); }
+function clamp01to100(n) { return Math.max(0, Math.min(100, Number(n) || 50)); }
 function normalizeList(raw, fallback) {
   if (Array.isArray(raw) && raw.length > 0) return raw;
   if (typeof raw === "string") {
@@ -41,36 +26,28 @@ function normalizeList(raw, fallback) {
   }
   return fallback;
 }
-
 function formatDate(dateString) {
   if (!dateString) return "Unknown date";
   const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "Unknown date";
-  return date.toLocaleDateString();
-}
-
-function buildTimeline(posts) {
-  const appTimeline = posts.filter((post) => String(post.category_tag ?? "").toLowerCase().includes("app"));
-  const projectTimeline = posts.filter((post) => !String(post.category_tag ?? "").toLowerCase().includes("app"));
-  return { appTimeline, projectTimeline };
+  return Number.isNaN(date.getTime()) ? "Unknown date" : date.toLocaleDateString();
 }
 
 function TimelineSection({ title, items }) {
   return (
-    <section className="rounded-xl border border-black/15 bg-white p-4">
-      <h4 className="text-lg font-semibold text-black">{title}</h4>
+    <section className="rounded-xl border border-[#E8E5E0] bg-white p-5 shadow-sm">
+      <h4 className="text-lg font-bold text-[#111111] mb-4 font-['Syne',_sans-serif]">{title}</h4>
       {items.length === 0 ? (
-        <p className="mt-3 text-sm text-black/70">No timeline entries yet.</p>
+        <p className="text-sm text-[#999990] font-medium">내역이 없습니다.</p>
       ) : (
-        <ul className="mt-3 space-y-3">
+        <ul className="space-y-3">
           {items.map((item) => (
-            <li key={item.id} className="rounded-lg border border-black/10 bg-white p-3">
+            <li key={item.id} className="rounded-xl border border-gray-100 bg-[#F4F2EF] p-4 transition-colors hover:bg-gray-100">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-black">{item.title}</p>
-                  <p className="mt-1 text-sm text-black/80">{item.content}</p>
+                  <p className="font-bold text-[#111111]">{item.title}</p>
+                  <p className="mt-1 text-sm text-[#E14141] font-semibold">{item.content}</p>
                 </div>
-                <span className="whitespace-nowrap text-xs text-black/60">{formatDate(item.created_at)}</span>
+                <span className="whitespace-nowrap text-xs text-[#999990] font-bold">{formatDate(item.created_at)}</span>
               </div>
             </li>
           ))}
@@ -86,9 +63,12 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState({ ...fallbackProfile, id: routeKey });
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [posts, setPosts] = useState([]);
+  
+  // 🚨 State 변수들이 덮어씌워지지 않도록 철저히 보호
+  const [projectTimeline, setProjectTimeline] = useState([]); // 내가 쓴 글
+  const [appTimeline, setAppTimeline] = useState([]); // 내가 지원한 내역
+  
   const [loading, setLoading] = useState(true);
-
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -128,17 +108,45 @@ export default function ProfilePage() {
         setEditLinkedin(normalizedProfile.linkedin_url || "");
         setEditGithub(normalizedProfile.github_url || "");
         setEditManner(String(normalizedProfile.manner_temp));
-        
         setSelectedSkills(normalizeList(profileRow.technical_skills, []));
         setSelectedTags(normalizeList(profileRow.interest_tags, []));
 
+        // 1. 내가 쓴 글 (Project Timeline)
         const { data: postsData } = await supabase
           .from("projects")
           .select("id, author_id, title, category_tag, content, created_at")
           .eq("author_id", profileRow.id)
           .order("created_at", { ascending: false });
-          
-        setPosts(postsData || []);
+        setProjectTimeline(postsData || []);
+
+        // 2. 내가 지원한 내역 (Application Timeline)
+        const { data: appsData, error: appsError } = await supabase
+          .from("applications")
+          .select(`
+            id, created_at, status,
+            project_roles (
+              role_name,
+              projects ( title )
+            )
+          `)
+          .eq("applicant_id", profileRow.id)
+          .order("created_at", { ascending: false });
+
+        if (appsError) console.error("지원 내역 에러:", appsError);
+
+        const formattedApps = (appsData || []).map(app => {
+          // Supabase가 데이터를 배열로 주든 객체로 주든 100% 안전하게 처리
+          const roleData = Array.isArray(app.project_roles) ? app.project_roles[0] : app.project_roles;
+          const projectData = Array.isArray(roleData?.projects) ? roleData.projects[0] : roleData?.projects;
+
+          return {
+            id: app.id,
+            title: `[지원] ${projectData?.title || '삭제된 프로젝트'}`,
+            content: `포지션: ${roleData?.role_name || '알 수 없음'} (상태: ${app.status || '대기중'})`,
+            created_at: app.created_at
+          };
+        });
+        setAppTimeline(formattedApps);
       }
       setLoading(false);
     };
@@ -147,10 +155,9 @@ export default function ProfilePage() {
     return () => { active = false; };
   }, [routeKey]);
 
-  const { appTimeline, projectTimeline } = useMemo(() => buildTimeline(posts), [posts]);
   const displayId = profile.school_email.split('@')[0];
-  const commitCount = posts.length;
   const isMyProfile = currentUserId === profile.id;
+  const commitCount = projectTimeline.length;
 
   const toggleArrayItem = (item, array, setArray) => {
     if (array.includes(item)) setArray(array.filter(i => i !== item));
@@ -178,10 +185,7 @@ export default function ProfilePage() {
         alert("저장 실패: " + updateError.message);
       } else {
         setProfile((prev) => ({
-          ...prev,
-          linkedin_url: editLinkedin,
-          github_url: editGithub,
-          manner_temp: nextManner,
+          ...prev, linkedin_url: editLinkedin, github_url: editGithub, manner_temp: nextManner,
         }));
         setIsEditOpen(false); 
       }
@@ -200,29 +204,24 @@ export default function ProfilePage() {
         
         <div className="col-span-12 lg:col-span-8 space-y-6">
           <div className="rounded-2xl border border-black/20 bg-white p-5 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 font-['Syne',_sans-serif]">Explore Projects</h2>
-            <Feed />
+            <h2 className="text-xl font-semibold mb-4 font-['Syne',_sans-serif]">Projects by {displayId}</h2>
+            {profile.id !== "unknown-user" && <Feed authorId={profile.id} />}
           </div>
 
           <div className="rounded-2xl border border-black/20 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-black font-['Syne',_sans-serif]">Timeline</h3>
-              <span className="text-sm text-black/70">ID: {displayId}</span>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-black font-['Syne',_sans-serif]">Activity Timeline</h3>
             </div>
-            <div className="grid gap-4 lg:grid-cols-2">
-              <TimelineSection title="Application Timeline" items={appTimeline} />
-              <TimelineSection title="Project Timeline" items={projectTimeline} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <TimelineSection title="Applications" items={appTimeline} />
+              <TimelineSection title="Posted Projects" items={projectTimeline} />
             </div>
           </div>
         </div>
 
         <div className="col-span-12 lg:col-span-4 space-y-6">
           <div className="relative rounded-2xl border border-black/20 bg-white p-6 shadow-sm text-center">
-            <img
-              src={profile.avatar_url || fallbackProfile.avatar_url}
-              alt="profile avatar"
-              className="mx-auto h-36 w-36 rounded-full border-4 border-black/20 bg-white object-cover"
-            />
+            <img src={profile.avatar_url || fallbackProfile.avatar_url} alt="profile avatar" className="mx-auto h-36 w-36 rounded-full border-4 border-black/20 bg-white object-cover" />
             <h2 className="mt-4 break-all text-3xl font-extrabold text-black font-['Syne',_sans-serif]">{displayId}</h2>
             <p className="mt-1 text-sm text-black/80 font-medium">{profile.school_email}</p>
 
@@ -233,18 +232,14 @@ export default function ProfilePage() {
             <div className="mt-6">
               <p className="text-xs font-bold uppercase tracking-wider text-black/60">Technical Skills</p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                {selectedSkills.length > 0 ? selectedSkills.map((skill) => (
-                  <span key={skill} className={whitePill}>{skill}</span>
-                )) : <span className="text-xs text-gray-400">Not set</span>}
+                {selectedSkills.length > 0 ? selectedSkills.map((skill) => (<span key={skill} className={whitePill}>{skill}</span>)) : <span className="text-xs text-gray-400">Not set</span>}
               </div>
             </div>
 
             <div className="mt-6">
               <p className="text-xs font-bold uppercase tracking-wider text-black/60">Interest Tags</p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                {selectedTags.length > 0 ? selectedTags.map((tag) => (
-                  <span key={tag} className={whitePill}>{tag}</span>
-                )) : <span className="text-xs text-gray-400">Not set</span>}
+                {selectedTags.length > 0 ? selectedTags.map((tag) => (<span key={tag} className={whitePill}>{tag}</span>)) : <span className="text-xs text-gray-400">Not set</span>}
               </div>
             </div>
 
@@ -257,7 +252,7 @@ export default function ProfilePage() {
             )}
             
             <div className="absolute bottom-4 right-4 rounded-full border border-[#E14141] bg-[#FFF0F0] px-3 py-1 text-xs font-bold text-[#E14141]">
-              ● Commits {commitCount}
+              ● Posts {commitCount}
             </div>
           </div>
         </div>
@@ -269,12 +264,7 @@ export default function ProfilePage() {
             <span className="text-sm font-bold text-gray-700">Technical Skills</span>
             <div className="mt-3 flex flex-wrap gap-2">
               {SKILL_OPTIONS.map(skill => (
-                <button
-                  key={skill} type="button" onClick={() => toggleArrayItem(skill, selectedSkills, setSelectedSkills)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                    selectedSkills.includes(skill) ? 'bg-black text-white border-black shadow-sm' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400'
-                  }`}
-                >
+                <button key={skill} type="button" onClick={() => toggleArrayItem(skill, selectedSkills, setSelectedSkills)} className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${selectedSkills.includes(skill) ? 'bg-black text-white border-black shadow-sm' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400'}`}>
                   {skill}
                 </button>
               ))}
@@ -285,12 +275,7 @@ export default function ProfilePage() {
             <span className="text-sm font-bold text-gray-700">Interest Tags</span>
             <div className="mt-3 flex flex-wrap gap-2">
               {INTEREST_OPTIONS.map(tag => (
-                <button
-                  key={tag} type="button" onClick={() => toggleArrayItem(tag, selectedTags, setSelectedTags)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                    selectedTags.includes(tag) ? 'bg-[#E14141] text-white border-[#E14141] shadow-sm' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400'
-                  }`}
-                >
+                <button key={tag} type="button" onClick={() => toggleArrayItem(tag, selectedTags, setSelectedTags)} className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${selectedTags.includes(tag) ? 'bg-[#E14141] text-white border-[#E14141] shadow-sm' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400'}`}>
                   {tag}
                 </button>
               ))}
@@ -308,12 +293,8 @@ export default function ProfilePage() {
           </label>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <button type="button" onClick={() => setIsEditOpen(false)} className="rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors">
-              Cancel
-            </button>
-            <button type="submit" disabled={saving} className="rounded-lg bg-[#E14141] px-6 py-3 text-sm font-bold text-white hover:bg-red-700 transition-colors shadow-md disabled:opacity-60">
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
+            <button type="button" onClick={() => setIsEditOpen(false)} className="rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+            <button type="submit" disabled={saving} className="rounded-lg bg-[#E14141] px-6 py-3 text-sm font-bold text-white hover:bg-red-700 transition-colors shadow-md disabled:opacity-60">{saving ? "Saving..." : "Save Changes"}</button>
           </div>
         </form>
       </Modal>

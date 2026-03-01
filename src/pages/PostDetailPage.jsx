@@ -9,10 +9,10 @@ export default function PostDetailPage() {
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
+    
+    // 🚨 [추가됨] 내가 지원한 포지션들의 ID를 기억할 Set 자료구조
+    const [appliedRoles, setAppliedRoles] = useState(new Set());
 
-    // ---------------------------------------------------------
-    // 💡 기존에 짜둔 완벽한 DB 로직 (절대 건드리지 않음!)
-    // ---------------------------------------------------------
     useEffect(() => {
         fetchData();
     }, [postId]);
@@ -20,7 +20,8 @@ export default function PostDetailPage() {
     const fetchData = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            setCurrentUser(session?.user || null);
+            const user = session?.user || null;
+            setCurrentUser(user);
 
             const { data, error } = await supabase
                 .from('projects')
@@ -34,6 +35,23 @@ export default function PostDetailPage() {
 
             if (error) throw error;
             setProject(data);
+
+            // 🚨 [핵심 로직] 로그인한 유저라면, 이 프로젝트의 직군들에 이미 지원했는지 검사
+            if (user && data.project_roles?.length > 0) {
+                const roleIds = data.project_roles.map(r => r.id);
+                
+                const { data: appliedData } = await supabase
+                    .from('applications')
+                    .select('role_id')
+                    .eq('applicant_id', user.id)
+                    .in('role_id', roleIds); // 이 프로젝트에 속한 직군 ID들만 검색
+
+                if (appliedData) {
+                    // 내가 이미 지원한 role_id들만 모아서 Set에 저장
+                    setAppliedRoles(new Set(appliedData.map(a => a.role_id)));
+                }
+            }
+
         } catch (error) {
             console.error('글 상세정보 에러:', error.message);
             alert('존재하지 않거나 삭제된 프로젝트입니다.');
@@ -49,7 +67,28 @@ export default function PostDetailPage() {
             navigate('/login');
             return;
         }
-        alert(`[${roleName}] 포지션에 지원했습니다!`);
+
+        const { error } = await supabase
+            .from('applications')
+            .insert([{
+                role_id: roleId,
+                applicant_id: currentUser.id,
+                message: "프로젝트에 함께하고 싶습니다!", 
+                status: "pending" 
+            }]);
+
+        if (error) {
+            if (error.code === '23505') {
+                alert('이미 지원한 포지션입니다!');
+            } else {
+                alert('지원 처리 중 오류가 발생했습니다: ' + error.message);
+            }
+        } else {
+            alert(`[${roleName}] 포지션에 성공적으로 지원했습니다! 내 프로필에서 확인하세요.`);
+            
+            // 🚨 [추가됨] DB 저장이 성공하면, 화면의 버튼도 즉시 "지원 완료"로 바꾸기 위해 Set에 추가
+            setAppliedRoles(prev => new Set(prev).add(roleId));
+        }
     };
 
     const handleToggleClose = async (roleId, currentStatus) => {
@@ -61,13 +100,8 @@ export default function PostDetailPage() {
             .eq('id', roleId)
             .select();
 
-        if (error) {
-            alert('상태 변경에 실패했습니다.');
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            alert('수정 권한이 없습니다.');
+        if (error || !data || data.length === 0) {
+            alert('상태 변경에 실패했거나 수정 권한이 없습니다.');
             return;
         }
 
@@ -95,17 +129,15 @@ export default function PostDetailPage() {
 
     const handleEdit = () => alert('글 수정 기능은 개발 예정입니다.');
 
-    if (loading) return <div className="text-center py-20 font-bold text-[#999990] bg-[#F4F2EF] min-h-screen">Loading project...</div>;
+    if (loading) return <div className="ml-[64px] min-h-screen bg-[#F4F2EF] py-20 text-center font-bold text-[#999990]">Loading project...</div>;
     if (!project) return null;
 
     const isAuthor = currentUser?.id === project.author_id;
+    const authorName = project.profiles?.school_email?.split('@')[0] || '익명 유저';
+    const techStacksArray = project.tech_stacks ? project.tech_stacks.split(',').map(t => t.trim()) : [];
 
-    // ---------------------------------------------------------
-    // 🎨 친구분의 UI/UX 디자인이 적용된 렌더링 영역
-    // ---------------------------------------------------------
     return (
-        <div className="bg-[#F4F2EF] min-h-screen py-10 px-4 font-['DM_Sans',_sans-serif]">
-            {/* 친구분 디자인에 있던 폰트와 스크롤바 숨김, 애니메이션 CSS 주입 */}
+        <div className="ml-[64px] min-h-screen bg-[#F4F2EF] py-10 px-4 font-['DM_Sans',_sans-serif]">
             <style>
                 {`
                     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap');
@@ -135,18 +167,17 @@ export default function PostDetailPage() {
                         
                         <div className="flex justify-between items-start">
                             <div>
-                                <h1 className="text-4xl font-extrabold text-[#111111] mb-3 font-['Syne',_sans-serif] tracking-tight">
+                                <h1 className="text-4xl font-extrabold text-[#111111] mb-4 font-['Syne',_sans-serif] tracking-tight">
                                     {project.title}
                                 </h1>
-                                <p className="text-sm text-[#999990] font-medium flex items-center">
-                                    <span className="w-6 h-6 rounded-full bg-indigo-100 inline-block mr-2 text-center leading-6 text-xs text-indigo-700 font-bold">
-                                        {project.profiles?.school_email?.charAt(0).toUpperCase() || '?'}
-                                    </span>
-                                    {project.profiles?.school_email?.split('@')[0] || '익명 유저'}
-                                </p>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm text-indigo-700 font-bold">
+                                        {authorName.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-sm text-[#999990] font-bold">{authorName}</span>
+                                </div>
                             </div>
 
-                            {/* [조건부 렌더링] 작성자용 수정/삭제 버튼 */}
                             {isAuthor && (
                                 <div className="flex space-x-2 ml-4">
                                     <button onClick={handleEdit} className="px-4 py-2 text-sm font-semibold bg-gray-100 text-[#111111] hover:bg-gray-200 rounded-lg transition-colors">
@@ -158,6 +189,16 @@ export default function PostDetailPage() {
                                 </div>
                             )}
                         </div>
+
+                        {techStacksArray.length > 0 && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                {techStacksArray.map((tech, idx) => (
+                                    <span key={idx} className="px-3 py-1 text-xs font-bold rounded-md bg-[#111111] text-white">
+                                        {tech}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="p-8">
@@ -168,44 +209,52 @@ export default function PostDetailPage() {
                     </div>
                 </div>
 
-                {/* 2. 하단 역할군 (Role Cards) - 친구분 디자인의 가로 스크롤 적용 */}
+                {/* 2. 하단 역할군 (Role Cards) */}
                 <div className="mb-4 px-2">
                     <h3 className="text-2xl font-bold text-[#111111] font-['Syne',_sans-serif]">Open Roles</h3>
                 </div>
                 
                 <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar px-2">
-                    {project.project_roles && project.project_roles.map((role, index) => (
-                        <div 
-                            key={role.id} 
-                            className={`min-w-[280px] flex-shrink-0 bg-[#FFFFFF] border ${role.is_closed ? 'border-gray-200 opacity-70' : 'border-[#E8E5E0]'} rounded-2xl p-6 shadow-sm flex flex-col justify-between rise`}
-                            style={{ animationDelay: `${(index + 1) * 0.1}s` }}
-                        >
-                            <div>
-                                <div className="flex justify-between items-center mb-4">
-                                    <div className="w-10 h-10 rounded-full bg-[#F4F2EF] flex items-center justify-center text-lg border border-[#E8E5E0]">
-                                        🎯
+                    {project.project_roles && project.project_roles.map((role, index) => {
+                        // 🚨 현재 반복문이 돌고 있는 직군에 내가 지원했는지 여부 확인
+                        const hasApplied = appliedRoles.has(role.id);
+
+                        return (
+                            <div 
+                                key={role.id} 
+                                className={`min-w-[280px] flex-shrink-0 bg-[#FFFFFF] border ${role.is_closed ? 'border-gray-200 opacity-70' : 'border-[#E8E5E0]'} rounded-2xl p-6 shadow-sm flex flex-col justify-between rise`}
+                                style={{ animationDelay: `${(index + 1) * 0.1}s` }}
+                            >
+                                <div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-[#F4F2EF] flex items-center justify-center text-lg border border-[#E8E5E0]">
+                                            🎯
+                                        </div>
+                                        {role.is_closed && <span className="text-xs font-bold text-[#E14141] bg-[#FFF0F0] px-2 py-1 rounded-full border border-[#f5d5d5]">Closed</span>}
                                     </div>
-                                    {role.is_closed && <span className="text-xs font-bold text-[#E14141] bg-[#FFF0F0] px-2 py-1 rounded-full border border-[#f5d5d5]">Closed</span>}
+                                    <h4 className="text-xl font-bold text-[#111111] mb-2">{role.role_name}</h4>
                                 </div>
-                                <h4 className="text-xl font-bold text-[#111111] mb-2">{role.role_name}</h4>
-                            </div>
-                            
-                            <div className="mt-6 pt-4 border-t border-[#E8E5E0]">
-                                {isAuthor ? (
-                                    <button 
-                                        onClick={() => handleToggleClose(role.id, role.is_closed)}
-                                        className={`w-full py-2.5 font-bold rounded-lg transition-colors ${
-                                            role.is_closed 
-                                                ? 'bg-[#F4F2EF] text-[#111111] hover:bg-gray-200 border border-[#E8E5E0]' 
-                                                : 'bg-[#E14141] hover:bg-red-600 text-white shadow-sm'
-                                        }`}
-                                    >
-                                        {role.is_closed ? '마감 취소' : '마감하기'}
-                                    </button>
-                                ) : (
-                                    role.is_closed ? (
+                                
+                                <div className="mt-6 pt-4 border-t border-[#E8E5E0]">
+                                    {isAuthor ? (
+                                        <button 
+                                            onClick={() => handleToggleClose(role.id, role.is_closed)}
+                                            className={`w-full py-2.5 font-bold rounded-lg transition-colors ${
+                                                role.is_closed 
+                                                    ? 'bg-[#F4F2EF] text-[#111111] hover:bg-gray-200 border border-[#E8E5E0]' 
+                                                    : 'bg-[#E14141] hover:bg-red-600 text-white shadow-sm'
+                                            }`}
+                                        >
+                                            {role.is_closed ? '마감 취소' : '마감하기'}
+                                        </button>
+                                    ) : role.is_closed ? (
                                         <button disabled className="w-full py-2.5 bg-[#F4F2EF] text-[#999990] font-bold rounded-lg cursor-not-allowed border border-[#E8E5E0]">
                                             모집 마감
+                                        </button>
+                                    ) : hasApplied ? (
+                                        // 🚨 이미 지원한 상태라면 비활성화된 "지원 완료" 버튼 표시
+                                        <button disabled className="w-full py-2.5 bg-[#FFF0F0] text-[#E14141] font-bold rounded-lg cursor-not-allowed border border-[#f5d5d5]">
+                                            지원 완료 ✓
                                         </button>
                                     ) : (
                                         <button 
@@ -214,11 +263,11 @@ export default function PostDetailPage() {
                                         >
                                             지원하기 →
                                         </button>
-                                    )
-                                )}
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                     {project.project_roles?.length === 0 && (
                         <div className="text-[#999990] text-sm p-4">등록된 모집 포지션이 없습니다.</div>
                     )}
