@@ -29,12 +29,6 @@ const style = `
     position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
   }
 
-  .sidebar-logo {
-    width: 34px; height: 34px; border: 2px solid rgba(255,255,255,0.5);
-    border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif; font-size: 14px; color: #fff; user-select: none;
-  }
-
   .sidebar-nav { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 
   .nav-btn {
@@ -97,31 +91,35 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">P</div>
+      <img
+        src="/src/assets/logo.png"
+        alt="logo"
+        style={{ width: 70, height: 70, objectFit: "contain", marginTop: -30 }}
+      />
 
       <nav className="sidebar-nav">
         <NavLink to="/" end className={navClass}>
           <svg viewBox="0 0 24 24">
-            <rect x="3" y="3" width="7" height="7" rx="1"/>
-            <rect x="14" y="3" width="7" height="7" rx="1"/>
-            <rect x="3" y="14" width="7" height="7" rx="1"/>
-            <rect x="14" y="14" width="7" height="7" rx="1"/>
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
           </svg>
           <span className="tooltip">Projects</span>
         </NavLink>
 
         <NavLink to="/new" className={navClass}>
           <svg viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           <span className="tooltip">New Project</span>
         </NavLink>
 
         <NavLink to="/profile/me" className={navClass}>
           <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="8" r="4"/>
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
           </svg>
           <span className="tooltip">Profile</span>
         </NavLink>
@@ -130,18 +128,18 @@ function Sidebar() {
       {user ? (
         <button className="nav-btn-logout" onClick={handleLogout}>
           <svg viewBox="0 0 24 24">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
           <span className="tooltip">Log Out</span>
         </button>
       ) : (
         <button className="nav-btn-logout" onClick={() => navigate("/login")}>
           <svg viewBox="0 0 24 24">
-            <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
-            <polyline points="10 17 15 12 10 7"/>
-            <line x1="15" y1="12" x2="3" y2="12"/>
+            <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" />
+            <polyline points="10 17 15 12 10 7" />
+            <line x1="15" y1="12" x2="3" y2="12" />
           </svg>
           <span className="tooltip">Sign In</span>
         </button>
