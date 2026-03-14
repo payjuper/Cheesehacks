@@ -8,6 +8,7 @@ import NewProject from "./pages/NewProject";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import AuthCallback from "./pages/AuthCallback";
 
 function RequireAuth({ children }) {
   const [user, setUser] = useState(undefined);
@@ -27,6 +28,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route element={<Layout />}>
           <Route path="/" element={<ProjectsList />} />
           <Route path="project/:id" element={<ProjectSpecifics />} />

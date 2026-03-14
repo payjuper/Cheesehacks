@@ -55,7 +55,7 @@ export default function ProjectCard({ project, animDelay }) {
   style={{ 
     animationDelay: `${animDelay}s`,
     width: '50vw',
-    height: '15vw',
+    height: '17vw',
   }}
   onMouseEnter={handleMouseEnter}
   onMouseLeave={handleMouseLeave}

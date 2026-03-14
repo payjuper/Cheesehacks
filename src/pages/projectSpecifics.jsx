@@ -91,7 +91,7 @@ function RoleIcon({ type }) {
   );
 }
 
-function RoleCard({ role, index, hasApplied, onApply, animClass }) {
+function RoleCard({ role, index, hasApplied, onApply, onToggleClose, isAuthor, animClass }) {
   const types = ['fe', 'ml', 'ds', 'ux'];
   const type = types[index % types.length];
   const isFull = role.is_closed;
@@ -123,7 +123,20 @@ function RoleCard({ role, index, hasApplied, onApply, animClass }) {
 
       <div style={{ flexGrow: 1 }} />
 
-      {hasApplied ? (
+      {isAuthor ? (
+      <button
+        onClick={() => onToggleClose(role.id, role.is_closed)}
+        style={{
+          width: "100%", padding: 10, borderRadius: 10,
+          border: `1.5px solid ${isFull ? "#2E8B57" : "#E14141"}`,
+          background: isFull ? "#F0FFF4" : "#FFF0F0",
+          color: isFull ? "#2E8B57" : "#E14141",
+          fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600,
+          cursor: "pointer", transition: "all 0.2s"
+        }}>
+        {isFull ? "Reopen Position" : "Close Position"}
+      </button>
+      ) : hasApplied ? (
         <button disabled style={{ width: "100%", padding: 10, borderRadius: 10, border: "1.5px solid #f5d5d5", background: "#FFF0F0", color: "#E14141", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: "not-allowed" }}>
           ✓ Applied
         </button>
@@ -208,6 +221,25 @@ export default function ProjectSpecifics() {
     }
   };
 
+  const handleToggleClose = async (roleId, currentStatus) => {
+    const { error } = await supabase
+      .from('project_roles')
+      .update({ is_closed: !currentStatus })
+      .eq('id', roleId);
+
+    if (error) {
+      alert('Failed to update position: ' + error.message);
+    } else {
+      // Update UI instantly without refetching
+      setProject(prev => ({
+        ...prev,
+        project_roles: prev.project_roles.map(r =>
+          r.id === roleId ? { ...r, is_closed: !currentStatus } : r
+        )
+      }));
+    }
+  };
+
   if (loading) return <div className="ps-root ps-loading"><style>{styles}</style>Loading project details...</div>;
   if (!project) return null;
 
@@ -278,6 +310,8 @@ export default function ProjectSpecifics() {
                   index={idx}
                   hasApplied={appliedRoles.has(role.id)}
                   onApply={handleApply}
+                  onToggleClose={handleToggleClose}
+                  isAuthor={currentUser?.id === project?.author_id}
                   animClass={`rise-${(idx % 4) + 1}`}
                 />
               ))

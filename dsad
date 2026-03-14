@@ -1,0 +1,51 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.applications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  role_id uuid,
+  applicant_id uuid,
+  message text,
+  status text DEFAULT 'pending'::text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  project_id bigint,
+  CONSTRAINT applications_pkey PRIMARY KEY (id),
+  CONSTRAINT applications_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.project_roles(id),
+  CONSTRAINT applications_applicant_id_fkey FOREIGN KEY (applicant_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  school_email text NOT NULL,
+  manner_temp double precision DEFAULT 36.5,
+  github_url text,
+  linkedin_url text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  technical_skills text,
+  interest_tags text,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.project_roles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  project_id uuid,
+  role_name text NOT NULL,
+  is_closed boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  required_skills text,
+  CONSTRAINT project_roles_pkey PRIMARY KEY (id),
+  CONSTRAINT project_roles_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id)
+);
+CREATE TABLE public.projects (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  author_id uuid,
+  title text NOT NULL,
+  category_tag text NOT NULL,
+  content text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  tech_stacks text,
+  images ARRAY,
+  start_date date,
+  end_date date,
+  CONSTRAINT projects_pkey PRIMARY KEY (id),
+  CONSTRAINT projects_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id)
+);

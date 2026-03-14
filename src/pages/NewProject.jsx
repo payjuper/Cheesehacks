@@ -47,7 +47,7 @@ export default function NewProject() {
     }
 
     const combinedTags = [...selectedTags, ...customTags];
-    const categoryTag = combinedTags.length > 0 ? combinedTags[0] : "General";
+    const categoryTag = combinedTags.length > 0 ? combinedTags.join(", ") : "General";
     const techStacksString = selectedTech.join(", ");
 
     const { data, error } = await supabase.from("projects").insert([{

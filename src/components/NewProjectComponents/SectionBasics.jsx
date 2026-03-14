@@ -1,17 +1,49 @@
 import { useState, useRef } from "react";
+import { supabase } from "../../supabaseClient";
 
 const MAX_DESC = 280;
 
 export default function SectionBasics({ title, setTitle, desc, setDesc, previews, setPreviews }) {
   const fileRef = useRef();
   const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFiles = (files) => {
-    const urls = Array.from(files)
+  // NEW: actually uploads the file to Supabase Storage
+  // and returns the public URL (a real internet link to the image)
+  const uploadToSupabase = async (file) => {
+    const ext = file.name.split('.').pop();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from('project-images')
+      .upload(path, file);
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+      .from('project-images')
+      .getPublicUrl(path);
+
+    return data.publicUrl;
+  };
+
+  // NEW: handles multiple files, uploads each one
+  const handleFiles = async (files) => {
+    const valid = Array.from(files)
       .filter(f => f.type.startsWith("image/"))
-      .slice(0, 4 - previews.length)
-      .map(f => URL.createObjectURL(f));
-    setPreviews(prev => [...prev, ...urls].slice(0, 4));
+      .slice(0, 4 - previews.length);
+
+    if (!valid.length) return;
+
+    setUploading(true);
+    try {
+      const urls = await Promise.all(valid.map(uploadToSupabase));
+      setPreviews(prev => [...prev, ...urls].slice(0, 4));
+    } catch (e) {
+      alert("Upload failed: " + e.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removePreview = (i) => setPreviews(prev => prev.filter((_, idx) => idx !== i));
@@ -53,10 +85,11 @@ export default function SectionBasics({ title, setTitle, desc, setDesc, previews
 
       <div className="field">
         <label className="field-label">Project Images</label>
+
         {previews.length < 4 && (
           <div
             className={`upload-zone${dragging ? " dragging" : ""}`}
-            onClick={() => fileRef.current?.click()}
+            onClick={() => !uploading && fileRef.current?.click()}
             onDragOver={e => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
@@ -65,9 +98,17 @@ export default function SectionBasics({ title, setTitle, desc, setDesc, previews
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </div>
             <div className="upload-label">
-              {dragging ? "Drop images here" : "Click to upload or drag & drop"}
+              {uploading
+                ? "Uploading..."
+                : dragging
+                ? "Drop images here"
+                : "Click to upload or drag & drop"}
             </div>
-            <div className="upload-sub">PNG, JPG, WEBP — up to {4 - previews.length} image{4 - previews.length !== 1 ? "s" : ""}</div>
+            <div className="upload-sub">
+              {uploading
+                ? "Please wait"
+                : `PNG, JPG, WEBP — up to ${4 - previews.length} image${4 - previews.length !== 1 ? "s" : ""}`}
+            </div>
             <input
               ref={fileRef}
               type="file"
@@ -78,6 +119,7 @@ export default function SectionBasics({ title, setTitle, desc, setDesc, previews
             />
           </div>
         )}
+
         {previews.length > 0 && (
           <div className="upload-previews">
             {previews.map((src, i) => (

@@ -15,60 +15,6 @@ const style = `
 
   body { margin: 0; background: #fff; }
 
-  /* ── FLASH ── */
-  .flash {
-    position: fixed; inset: 0; z-index: 9999;
-    background: #fff;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.08s ease;
-  }
-  .flash.bang {
-    opacity: 1;
-    transition: none;
-  }
-
-  /* ── SPLASH ── */
-  .splash {
-    position: fixed; inset: 0; z-index: 999;
-    background: #fff;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .splash.gone { display: none; }
-
-  .splash-logo-wrap {
-    position: absolute; top: 28px; left: 32px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .splash-logo-text { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: #111; }
-
-  .splash-content { width: 100%; max-width: 380px; padding: 24px; }
-
-  .splash-card {
-    width: 100%; background: #111;
-    border: 1px solid #222; border-radius: 24px; padding: 40px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  }
-
-  .splash-heading { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; color: #fff; }
-  .splash-sub { font-size: 13px; font-weight: 300; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6; }
-  .splash-divider { height: 1px; background: #333; margin: 28px 0; }
-
-  .splash-field { margin-bottom: 14px; }
-  .splash-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 7px; }
-  .splash-input { width: 100%; padding: 11px 14px; border: 1.5px solid #333; border-radius: 12px; background: #1a1a1a; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #444; outline: none; }
-  .splash-input::placeholder { color: #333; }
-
-  .splash-btn {
-    width: 100%; padding: 12px; border-radius: 12px; border: none;
-    background: #222; color: #444;
-    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
-    display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;
-  }
-  .splash-btn svg { width: 14px; height: 14px; stroke: #444; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-
-  .splash-toggle { text-align: center; margin-top: 20px; font-size: 12px; color: #444; }
-  .splash-toggle span { color: #666; font-weight: 600; margin-left: 4px; }
 
   /* ── REAL LOGIN ── */
   .login-root {
@@ -164,25 +110,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
-  const [splashDone, setSplashDone] = useState(false);
-  const [flashing, setFlashing]    = useState(false);
 
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.code === "Space" && !splashDone) {
-        e.preventDefault();
-        // flash on
-        setFlashing(true);
-        setTimeout(() => {
-          // hide splash, turn off flash
-          setSplashDone(true);
-          setFlashing(false);
-        }, 120);
-      }
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [splashDone]);
+  const handleGoogleLogin = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      queryParams: { hd: 'wisc.edu', prompt: 'select_account' },
+      redirectTo: `${window.location.origin}/auth/callback`,
+    }
+  });
+  if (error) setError(error.message);
+};
 
   const handleSubmit = async () => {
     setError("");
@@ -197,38 +135,6 @@ export default function LoginPage() {
     <>
       <style>{style}</style>
 
-      {/* Flash layer */}
-      <div className={`flash${flashing ? " bang" : ""}`} />
-
-      {/* Splash */}
-      <div className={`splash${splashDone ? " gone" : ""}`}>
-        <div className="splash-logo-wrap">
-          <img src="/src/assets/logo.png" alt="logo" style={{ width: 200, height: 200, objectFit: "contain" }} />
-          <span className="splash-logo-text">Pilot Episode</span>
-        </div>
-        <div className="splash-content">
-          <div className="splash-card">
-            <h1 className="splash-heading">Welcome back.</h1>
-            <p className="splash-sub">Sign in to access your projects and profile.</p>
-            <div className="splash-divider" />
-            <div className="splash-field">
-              <label className="splash-label">Email</label>
-              <input className="splash-input" placeholder="you@university.edu" disabled />
-            </div>
-            <div className="splash-field">
-              <label className="splash-label">Password</label>
-              <input className="splash-input" type="password" placeholder="••••••••" disabled />
-            </div>
-            <button className="splash-btn" disabled>
-              <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-              Sign In
-            </button>
-            <div className="splash-toggle">
-              Don't have an account? <span>Sign up</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Real login */}
       <div className="login-root">
@@ -270,6 +176,23 @@ export default function LoginPage() {
                 Don't have an account?
                 <button onClick={() => navigate("/register")}>Sign up</button>
               </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0 0' }}>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+                <span style={{ fontSize: '12px', color: 'var(--muted)' }}>or</span>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+              </div>
+
+              <button className="login-btn" onClick={handleGoogleLogin}
+                style={{ marginTop: '12px', background: '#fff', color: '#111', border: '1.5px solid var(--border)', boxShadow: 'none' }}>
+                <svg viewBox="0 0 24 24" width="14" height="14" style={{ flexShrink: 0 }}>
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google (wisc.edu only)
+              </button>
             </div>
           </div>
         </div>

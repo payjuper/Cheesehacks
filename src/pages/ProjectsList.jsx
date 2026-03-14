@@ -38,7 +38,7 @@ export default function ProjectsList() {
             id: p.id,
             title: p.title,
             description: p.content,
-            tags: [p.category_tag],
+            tags: p.category_tag ? p.category_tag.split(",").map(t => t.trim()) : [],
             images: p.images || [],
             stack: stackArray,
             lead: authorName,

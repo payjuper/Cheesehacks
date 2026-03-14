@@ -194,6 +194,8 @@ export const style = `
 export const TAG_CLASS = {
   AI: "tag-ai", ML: "tag-ml", "Data Science": "tag-data",
   Web: "tag-web", Security: "tag-sec", IoT: "tag-iot",
+  ai: "tag-ai", ml: "tag-ml", data: "tag-data",
+  web: "tag-web", sec: "tag-sec", iot: "tag-iot",
 };
 
 export const TAG_FILTERS = ["All", "AI", "ML", "Data Science", "Web", "Security", "IoT"];
