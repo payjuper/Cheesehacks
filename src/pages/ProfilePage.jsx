@@ -47,11 +47,67 @@ const style = `
     background: var(--bg);
     color: var(--text);
     padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
   }
 
   .pp-container {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .pp-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 32px;
+  }
+
+  .pp-row-width {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 32px;
+  }
+
+  .pp-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    width: fit-content;
+  }
+  .pp-group.pp-group-full {
+    width: 100%;
+  }
+
+  /* ─── GROUP BOXES ─── */
+  .pp-group {
     border: 1px solid rgba(255,255,255,0.1);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+  }
+  .pp-group-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    padding: 6px 12px;
+    background: var(--bg-2);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pp-group-label::before {
+    content: '//';
+    color: var(--green);
+    font-size: 10px;
   }
 
   @keyframes fadeIn {
@@ -251,48 +307,34 @@ const style = `
   }
   .pp-btn-green:hover { background: rgba(0,255,136,0.2); border-color: var(--green); }
 
-  /* ─── NAV TABS ─── */
-  .pp-tabs {
-    display: flex;
-    gap: 0;
-    margin-top: 0;
-    border-top: 1px solid var(--border);
-    padding-left: 200px;
-  }
-  .pp-tab {
+  /* ─── SIDEBAR TAB HEADER ─── */
+  .pp-sidebar-tab {
     font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    padding: 8px 20px;
-    border: 1px solid transparent;
-    border-bottom: none;
-    cursor: default;
-    letter-spacing: 0.06em;
+    font-size: 10px;
+    font-weight: 700;
     text-transform: uppercase;
-  }
-  .pp-tab.active {
+    letter-spacing: 0.14em;
     color: var(--text);
-    background: var(--bg);
-    border-color: var(--border);
-    border-bottom-color: var(--bg);
-    position: relative;
-    bottom: -1px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .pp-tab-dot {
-    display: inline-block;
-    width: 5px; height: 5px;
+  .pp-sidebar-tab::before {
+    content: '';
+    width: 5px;
+    height: 5px;
     background: var(--green);
-    margin-right: 6px;
-    vertical-align: middle;
-    position: relative;
-    top: -1px;
+    flex-shrink: 0;
   }
 
   /* ─── BODY ─── */
   .pp-body {
     display: grid;
-    grid-template-columns: 240px 1fr;
-    min-height: calc(100vh - 160px);
+    grid-template-columns: max-content 1fr;
+    align-items: start;
   }
 
   /* ─── SIDEBAR ─── */
@@ -302,6 +344,8 @@ const style = `
     display: flex;
     flex-direction: column;
     gap: 0;
+    width: max-content;
+    min-width: 180px;
   }
   .pp-sidebar-section {
     border-bottom: 1px solid var(--border);
@@ -333,6 +377,7 @@ const style = `
     background: var(--border);
     border: 1px solid var(--border);
     margin-bottom: 0;
+    width: max-content;
   }
   .pp-stat {
     background: var(--bg-2);
@@ -406,6 +451,7 @@ const style = `
     padding: 0;
     display: flex;
     flex-direction: column;
+    align-self: start;
   }
 
   .pp-section {
@@ -874,163 +920,156 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="pp-container">
-
-      {/* Header — neofetch style */}
-      <div className="pp-header">
-        <div className="pp-header-top">
-          {/* Left: pixel art / avatar image */}
-          <div className="pp-avatar">
-            {avatarUrl
-              ? <img src={avatarUrl} alt={displayName} />
-              : <span className="pp-avatar-initials">{initials}</span>
-            }
-          </div>
-
-          {/* Right: neofetch info */}
-          <div className="pp-identity">
-            <div className="pp-neo-top">
-              <div className="pp-neo-info">
-                <div className="pp-neo-title">
-                  <span>{displayName.toLowerCase()}@</span>cheesehacks
+      {/* ── GROUP 1: PROFILE ── */}
+      <div className="pp-wrap">
+      <div className="pp-group pp-group-full">
+        <div className="pp-group-label">profile</div>
+        <div className="pp-header">
+          <div className="pp-header-top">
+            <div className="pp-avatar">
+              {avatarUrl
+                ? <img src={avatarUrl} alt={displayName} />
+                : <span className="pp-avatar-initials">{initials}</span>
+              }
+            </div>
+            <div className="pp-identity">
+              <div className="pp-neo-top">
+                <div className="pp-neo-info">
+                  <div className="pp-neo-title">
+                    <span>{displayName.toLowerCase()}@</span>cheesehacks
+                  </div>
+                  <div className="pp-neo-sep">{"─".repeat(32)}</div>
+                  <div className="pp-neo-row">
+                    <span className="pp-neo-key">name</span>
+                    <span className="pp-neo-val">{profile.full_name || displayName}</span>
+                  </div>
+                  <div className="pp-neo-row">
+                    <span className="pp-neo-key">year</span>
+                    <span className="pp-neo-val">{profile.year || "—"}</span>
+                  </div>
+                  <div className="pp-neo-row">
+                    <span className="pp-neo-key">major</span>
+                    <span className="pp-neo-val">{profile.major || "—"}</span>
+                  </div>
+                  <div className="pp-neo-row">
+                    <span className="pp-neo-key">github</span>
+                    <span className="pp-neo-val">
+                      {profile.github_url
+                        ? <a href={profile.github_url} target="_blank" rel="noreferrer">
+                            {profile.github_url.replace("https://github.com/", "github.com/")}
+                          </a>
+                        : "—"}
+                    </span>
+                  </div>
+                  <div className="pp-neo-row">
+                    <span className="pp-neo-key">email</span>
+                    <span className="pp-neo-val">{profile.school_email}</span>
+                  </div>
                 </div>
-                <div className="pp-neo-sep">{"─".repeat(32)}</div>
-
-                <div className="pp-neo-row">
-                  <span className="pp-neo-key">name</span>
-                  <span className="pp-neo-val">{profile.full_name || displayName}</span>
-                </div>
-                <div className="pp-neo-row">
-                  <span className="pp-neo-key">year</span>
-                  <span className="pp-neo-val">{profile.year || "—"}</span>
-                </div>
-                <div className="pp-neo-row">
-                  <span className="pp-neo-key">major</span>
-                  <span className="pp-neo-val">{profile.major || "—"}</span>
-                </div>
-                <div className="pp-neo-row">
-                  <span className="pp-neo-key">github</span>
-                  <span className="pp-neo-val">
-                    {profile.github_url
-                      ? <a href={profile.github_url} target="_blank" rel="noreferrer">
-                          {profile.github_url.replace("https://github.com/", "github.com/")}
-                        </a>
-                      : "—"}
-                  </span>
-                </div>
-                <div className="pp-neo-row">
-                  <span className="pp-neo-key">email</span>
-                  <span className="pp-neo-val">{profile.school_email}</span>
+                <div className="pp-colorbar">
+                  <div className="pp-colorbar-row">
+                    {["#3d3d3d","#7a3535","#a84444","#c05050","#d46060","#e08080","#c8a0a0","#e8e8e8"].map((c, i) => (
+                      <div key={i} className="pp-colorbar-swatch" style={{ background: c }} />
+                    ))}
+                  </div>
+                  <div className="pp-colorbar-row">
+                    {["#555555","#9b4444","#bf5555","#d46868","#e07878","#eeaaaa","#ddbaba","#ffffff"].map((c, i) => (
+                      <div key={i} className="pp-colorbar-swatch" style={{ background: c }} />
+                    ))}
+                  </div>
                 </div>
               </div>
-
-              {/* Colorbar — right side */}
-              <div className="pp-colorbar">
-                <div className="pp-colorbar-row">
-                  {["#3d3d3d","#7a3535","#a84444","#c05050","#d46060","#e08080","#c8a0a0","#e8e8e8"].map((c, i) => (
-                    <div key={i} className="pp-colorbar-swatch" style={{ background: c }} />
-                  ))}
-                </div>
-                <div className="pp-colorbar-row">
-                  {["#555555","#9b4444","#bf5555","#d46868","#e07878","#eeaaaa","#ddbaba","#ffffff"].map((c, i) => (
-                    <div key={i} className="pp-colorbar-swatch" style={{ background: c }} />
-                  ))}
-                </div>
+              <div className="pp-actions" style={{ marginTop: 16 }}>
+                <a className="pp-btn" href={`mailto:${profile.school_email}`}>
+                  <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="0"/><polyline points="2,4 12,13 22,4"/></svg>
+                  mail
+                </a>
+                {profile.github_url && (
+                  <a className="pp-btn" href={profile.github_url} target="_blank" rel="noreferrer">
+                    <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                    github
+                  </a>
+                )}
+                {profile.linkedin_url && (
+                  <a className="pp-btn" href={profile.linkedin_url} target="_blank" rel="noreferrer">
+                    <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                    linkedin
+                  </a>
+                )}
+                {isMyProfile && (
+                  <button className="pp-btn pp-btn-green" onClick={() => setIsEditOpen(true)}>
+                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    edit profile
+                  </button>
+                )}
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="pp-actions" style={{ marginTop: 16 }}>
-              <a className="pp-btn" href={`mailto:${profile.school_email}`}>
-                <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="0"/><polyline points="2,4 12,13 22,4"/></svg>
-                mail
-              </a>
-              {profile.github_url && (
-                <a className="pp-btn" href={profile.github_url} target="_blank" rel="noreferrer">
-                  <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-                  github
-                </a>
-              )}
-              {profile.linkedin_url && (
-                <a className="pp-btn" href={profile.linkedin_url} target="_blank" rel="noreferrer">
-                  <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-                  linkedin
-                </a>
-              )}
-              {isMyProfile && (
-                <button className="pp-btn pp-btn-green" onClick={() => setIsEditOpen(true)}>
-                  <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  edit profile
-                </button>
-              )}
-            </div>
           </div>
-        </div>
-
-        <div className="pp-tabs">
-          <div className="pp-tab active"><span className="pp-tab-dot" />overview</div>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="pp-body">
-        {/* Sidebar */}
-        <div className="pp-sidebar">
-          <div className="pp-sidebar-section" style={{ animationDelay: "0.05s" }}>
-            <div className="pp-sidebar-label">stats</div>
-            <div className="pp-stats-grid">
-              <div className="pp-stat">
-                <div className="pp-stat-num">{projects.length}</div>
-                <div className="pp-stat-label">posted</div>
-              </div>
-              <div className="pp-stat">
-                <div className="pp-stat-num">{applications.length}</div>
-                <div className="pp-stat-label">applied</div>
-              </div>
-              <div className="pp-stat">
-                <div className="pp-stat-num">{displaySkills.length}</div>
-                <div className="pp-stat-label">skills</div>
-              </div>
-              <div className="pp-stat">
-                <div className="pp-stat-num">{displayTags.length}</div>
-                <div className="pp-stat-label">interests</div>
+      <div className="pp-row">
+      {/* ── GROUP 2: OVERVIEW ── */}
+      <div className="pp-group">
+        <div className="pp-group-label">overview</div>
+        <div className="pp-body">
+          <div className="pp-sidebar">
+            <div className="pp-sidebar-section" style={{ animationDelay: "0.05s" }}>
+              <div className="pp-sidebar-label">stats</div>
+              <div className="pp-stats-grid">
+                <div className="pp-stat">
+                  <div className="pp-stat-num">{projects.length}</div>
+                  <div className="pp-stat-label">posted</div>
+                </div>
+                <div className="pp-stat">
+                  <div className="pp-stat-num">{applications.length}</div>
+                  <div className="pp-stat-label">applied</div>
+                </div>
+                <div className="pp-stat">
+                  <div className="pp-stat-num">{displaySkills.length}</div>
+                  <div className="pp-stat-label">skills</div>
+                </div>
+                <div className="pp-stat">
+                  <div className="pp-stat-num">{displayTags.length}</div>
+                  <div className="pp-stat-label">interests</div>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="pp-sidebar-section" style={{ animationDelay: "0.08s" }}>
-            <div className="pp-sidebar-label">tech stack</div>
-            {displaySkills.length > 0 ? (
-              <div className="pp-tech-list">
-                {displaySkills.map(name => (
-                  <div key={name} className="pp-tech-row">
-                    <span className="pp-tech-indicator" style={{ background: TECH_COLORS[name.toLowerCase()] ?? "#00FF88" }} />
-                    {name}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <span className="pp-link-empty">none selected</span>
-            )}
-          </div>
-
-          <div className="pp-sidebar-section" style={{ animationDelay: "0.11s" }}>
-            <div className="pp-sidebar-label">interests</div>
-            {displayTags.length > 0 ? (
-              <div className="pp-interest-list">
-                {displayTags.map(tag => (
-                  <span key={tag} className="pp-interest-chip">{tag}</span>
-                ))}
-              </div>
-            ) : (
-              <span className="pp-link-empty">none selected</span>
-            )}
+            <div className="pp-sidebar-section" style={{ animationDelay: "0.08s" }}>
+              <div className="pp-sidebar-label">tech stack</div>
+              {displaySkills.length > 0 ? (
+                <div className="pp-tech-list">
+                  {displaySkills.map(name => (
+                    <div key={name} className="pp-tech-row">
+                      <span className="pp-tech-indicator" style={{ background: TECH_COLORS[name.toLowerCase()] ?? "#00FF88" }} />
+                      {name}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className="pp-link-empty">none selected</span>
+              )}
+            </div>
+            <div className="pp-sidebar-section" style={{ animationDelay: "0.11s" }}>
+              <div className="pp-sidebar-label">interests</div>
+              {displayTags.length > 0 ? (
+                <div className="pp-interest-list">
+                  {displayTags.map(tag => (
+                    <span key={tag} className="pp-interest-chip">{tag}</span>
+                  ))}
+                </div>
+              ) : (
+                <span className="pp-link-empty">none selected</span>
+              )}
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Main */}
+      {/* ── GROUP 3: PROJECTS ── */}
+      <div className="pp-group">
+        <div className="pp-group-label">projects</div>
         <div className="pp-main">
-          {/* Posted Projects */}
           <div className="pp-section" style={{ animationDelay: "0.06s" }}>
             <div className="pp-section-header">
               <svg className="pp-section-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="0"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -1059,8 +1098,6 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-
-          {/* Applied Positions */}
           <div className="pp-section" style={{ animationDelay: "0.1s" }}>
             <div className="pp-section-header">
               <svg className="pp-section-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -1089,7 +1126,8 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-      </div>{/* end pp-container */}
+      </div>{/* end pp-row */}
+      </div>{/* end pp-wrap */}
 
       {/* Edit Modal */}
       <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Edit Profile">
