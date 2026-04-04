@@ -9,6 +9,9 @@ import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AuthCallback from "./pages/AuthCallback";
+import LabsPage from "./pages/LabsPage";
+import LabDetail from "./pages/LabDetail";
+import JobsPage from "./pages/JobsPage";
 
 function RequireAuth({ children }) {
   const [user, setUser] = useState(undefined);
@@ -35,6 +38,9 @@ export default function App() {
           <Route path="new" element={<NewProject />} />
           <Route path="profile/me" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           <Route path="profile/:id" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          <Route path="labs" element={<LabsPage />} />
+          <Route path="labs/:id" element={<LabDetail />} />
+          <Route path="jobs" element={<JobsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { style } from "../components/NewProjectComponents/styles";
+import { style, ALL_TECH } from "../components/NewProjectComponents/styles";
 import SectionBasics from "../components/NewProjectComponents/SectionBasics";
 import SectionDuration from "../components/NewProjectComponents/SectionDuration";
 import SectionTags from "../components/NewProjectComponents/SectionTags";
@@ -23,18 +23,27 @@ export default function NewProject() {
   const [previews, setPreviews]         = useState([]);
   const [toast, setToast]               = useState(false);
   const [roles, setRoles]               = useState([]);
+  const [attempted, setAttempted]       = useState(false);
+
+  const enabledNames = new Set(ALL_TECH.filter(t => selectedTech.includes(t.id)).map(t => t.name));
+  const hasRoleErrors = roles.some(role => {
+    const skills = role.required_skills ? role.required_skills.split(", ").filter(Boolean) : [];
+    return skills.length === 0 || skills.some(s => !enabledNames.has(s));
+  });
 
   const completedSections = [
     title.trim().length > 0 && desc.trim().length > 0,
     startDate.length > 0 && endDate.length > 0,
     selectedTags.length > 0 || customTags.length > 0,
     selectedTech.length > 0,
-    roles.length > 0,
+    roles.length > 0 && !hasRoleErrors,
   ];
 
+  const canPublish = completedSections.every(Boolean);
+
   const handleSubmit = async () => {
-    if (!title || !desc) {
-      alert("Please fill in both title and description!");
+    if (!canPublish) {
+      setAttempted(true);
       return;
     }
 
@@ -98,7 +107,7 @@ export default function NewProject() {
           </div>
           <div className="np-topbar-actions">
             <button className="btn-ghost" onClick={() => navigate('/')}>Discard</button>
-            <button className="btn-primary" onClick={handleSubmit}>
+            <button className="btn-primary" onClick={handleSubmit} style={{ opacity: canPublish ? 1 : 0.4, cursor: canPublish ? 'pointer' : 'not-allowed' }}>
               <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
               Publish Project
             </button>
@@ -108,11 +117,11 @@ export default function NewProject() {
         <div className="np-steps">
           {STEPS.map((label, i) => (
             <div key={label} style={{ display: "flex", alignItems: "center", flex: i < STEPS.length - 1 ? 1 : "none" }}>
-              <div className={`step${completedSections[i] ? " done" : ""}`}>
+              <div className={`step${completedSections[i] ? " done" : attempted && !completedSections[i] ? " error" : ""}`}>
                 <div className="step-dot">
                   {completedSections[i]
                     ? <svg viewBox="0 0 24 24" style={{ width: 10, height: 10, stroke: "#fff", fill: "none", strokeWidth: 3, strokeLinecap: "round", strokeLinejoin: "round" }}><polyline points="20 6 9 17 4 12" /></svg>
-                    : i + 1}
+                    : attempted && !completedSections[i] ? "!" : i + 1}
                 </div>
                 <span>{label}</span>
               </div>
@@ -141,6 +150,7 @@ export default function NewProject() {
             />
             <SectionRoles
               roles={roles} setRoles={setRoles}
+              projectTech={selectedTech}
             />
           </div>
         </div>

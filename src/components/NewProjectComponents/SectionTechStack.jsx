@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { ALL_TECH } from "./styles";
+import { TECH_ICON } from "../techIcons";
 
-function TechDot({ color }) {
-  return (
-    <span style={{
-      width: 8, height: 8, borderRadius: "50%",
-      background: color, display: "inline-block", flexShrink: 0,
-    }} />
-  );
+function TechLogo({ name, color, size = 14 }) {
+  const Icon = TECH_ICON[name];
+  if (Icon) return <Icon size={size} color={color} style={{ flexShrink: 0 }} />;
+  return <span style={{ width: size, height: size, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0 }} />;
 }
 
 export default function SectionTechStack({ selectedTech, setSelectedTech }) {
@@ -51,7 +49,7 @@ export default function SectionTechStack({ selectedTech, setSelectedTech }) {
             onClick={() => toggleTech(t.id)}
           >
             <div className="tech-icon">
-              <TechDot color={selectedTech.includes(t.id) ? "#fff" : t.color} />
+              <TechLogo name={t.name} color={selectedTech.includes(t.id) ? "#fff" : t.color} />
             </div>
             {t.name}
           </button>
@@ -65,7 +63,7 @@ export default function SectionTechStack({ selectedTech, setSelectedTech }) {
         <div className="selected-stack">
           {selectedTechObjs.map(t => (
             <div key={t.id} className="sel-chip">
-              <TechDot color={t.color} />
+              <TechLogo name={t.name} color={t.color} />
               {t.name}
               <button className="sel-chip-remove" onClick={() => toggleTech(t.id)}>×</button>
             </div>

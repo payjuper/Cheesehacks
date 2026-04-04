@@ -106,6 +106,21 @@ function Sidebar() {
           <span className="tooltip">Projects</span>
         </NavLink>
 
+        <NavLink to="/labs" className={navClass}>
+          <svg viewBox="0 0 24 24">
+            <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18"/>
+          </svg>
+          <span className="tooltip">Labs</span>
+        </NavLink>
+
+        <NavLink to="/jobs" className={navClass}>
+          <svg viewBox="0 0 24 24">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+          </svg>
+          <span className="tooltip">Jobs</span>
+        </NavLink>
+
         <NavLink to="/profile/me" className={navClass}>
           <svg viewBox="0 0 24 24">
             <circle cx="12" cy="8" r="4" />

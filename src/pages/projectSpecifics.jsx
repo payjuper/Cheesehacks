@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import { TECH_ICON, TECH_COLOR } from "../components/techIcons";
+import { ALL_TECH } from "../components/NewProjectComponents/styles";
+import { TAG_CLASS } from "../components/ProjectsListComponents/styles";
+import FacultyBadge from "../components/FacultyBadge";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap');
@@ -38,6 +42,14 @@ const styles = `
   .join-btn-base:hover:not(:disabled):not(.applied) { background: #E14141 !important; color: #fff !important; border-color: #E14141 !important; }
   .wishlist-base:hover { border-color: #E14141 !important; color: #E14141 !important; }
   .ps-loading { display: flex; align-items: center; justify-content: center; padding: 80px 0; color: var(--muted); font-size: 15px; font-weight: bold; }
+  .pp-proj-tag { font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; border: 1.5px solid transparent; }
+  .tag-ai   { background: #FFF0F0; color: #E14141; border-color: #F5C6C6; }
+  .tag-data { background: #EEF4FF; color: #3B6FE0; border-color: #C3D5F8; }
+  .tag-ml   { background: #F0FFF4; color: #2E8B57; border-color: #B2DFC0; }
+  .tag-web  { background: #FFF8EE; color: #E07B20; border-color: #F5D9B0; }
+  .tag-sec  { background: #F5F0FF; color: #7B3FE4; border-color: #D4B8F8; }
+  .tag-iot  { background: #F0F9FF; color: #0284C7; border-color: #BAE6FD; }
+  .tag-default { background: #f3f4f6; color: #4b5563; border-color: #e5e7eb; }
 `;
 
 const HeartIcon = ({ filled }) => (
@@ -46,24 +58,24 @@ const HeartIcon = ({ filled }) => (
   </svg>
 );
 
-const DefaultTechSvg = () => (
-  <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline>
-  </svg>
-);
+const idToName = Object.fromEntries(ALL_TECH.map(t => [t.id, t.name]));
 
-function StackItem({ name }) {
+function StackItem({ techId }) {
+  const name = idToName[techId] || techId;
+  const Icon = TECH_ICON[name];
+  const color = TECH_COLOR[name] ?? "#999";
   return (
     <div className="stack-item" style={{
-      display: "flex", alignItems: "center", gap: 8,
-      padding: "8px 15px", borderRadius: 12,
+      display: "flex", alignItems: "center", gap: 6,
+      padding: "5px 11px", borderRadius: 9,
       border: "1.5px solid #E8E5E0",
-      background: "#F4F2EF", fontSize: 13, fontWeight: 500,
+      background: "#F4F2EF", fontSize: 11, fontWeight: 500,
       transition: "border-color 0.18s, transform 0.15s", cursor: "default",
     }}>
-      <span style={{ width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#111" }}>
-        <DefaultTechSvg />
-      </span>
+      {Icon
+        ? <Icon size={13} color={color} />
+        : <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0 }} />
+      }
       {name}
     </div>
   );
@@ -172,24 +184,37 @@ export default function ProjectSpecifics() {
 
         const { data, error } = await supabase
           .from('projects')
-          .select(`*, profiles ( id, school_email ), project_roles ( id, role_name, is_closed, required_skills )`)
+          .select(`*, profiles!projects_author_id_fkey ( id, school_email, is_professor, professor_title ), project_roles ( id, role_name, is_closed, required_skills )`)
           .eq('id', id)
           .single();
 
         if (error) throw error;
         setProject(data);
 
-        if (user && data.project_roles?.length > 0) {
-          const roleIds = data.project_roles.map(r => r.id);
-          const { data: appliedData } = await supabase
-            .from('applications')
-            .select('role_id')
-            .eq('applicant_id', user.id)
-            .in('role_id', roleIds);
+        if (user) {
+          const checks = [];
 
-          if (appliedData) {
-            setAppliedRoles(new Set(appliedData.map(a => a.role_id)));
+          if (data.project_roles?.length > 0) {
+            checks.push(
+              supabase.from('applications').select('role_id')
+                .eq('applicant_id', user.id)
+                .in('role_id', data.project_roles.map(r => r.id))
+                .then(({ data: appliedData }) => {
+                  if (appliedData) setAppliedRoles(new Set(appliedData.map(a => a.role_id)));
+                })
+            );
           }
+
+          checks.push(
+            supabase.from('saved_projects').select('project_id')
+              .eq('user_id', user.id).eq('project_id', id)
+              .maybeSingle()
+              .then(({ data: saveRow }) => {
+                if (saveRow) setSaved(true);
+              })
+          );
+
+          await Promise.all(checks);
         }
       } catch (error) {
         console.error('Error fetching project:', error);
@@ -245,6 +270,7 @@ export default function ProjectSpecifics() {
 
   const authorEmail = project.profiles?.school_email || 'Anonymous';
   const authorName = authorEmail.split('@')[0];
+  const isProfessor = project.profiles?.is_professor || false;
   const techStacksArray = project.tech_stacks ? project.tech_stacks.split(',').map(t => t.trim()) : [];
 
   return (
@@ -257,19 +283,32 @@ export default function ProjectSpecifics() {
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 30, flexWrap: "wrap", gap: 12 }}>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", padding: "5px 13px", borderRadius: 100, border: "1.5px solid #111", background: "#111", color: "#fff" }}>
-                  {project.category_tag || "General"}
-                </span>
+                {(project.category_tag || "General").split(",").map(tag => tag.trim()).map(tag => (
+                  <span key={tag} className={`pp-proj-tag ${TAG_CLASS[tag] ?? "tag-default"}`}
+                    style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase", padding: "5px 13px", borderRadius: 100, border: "1.5px solid transparent" }}>
+                    {tag}
+                  </span>
+                ))}
               </div>
-              <button className="wishlist-base" onClick={() => setSaved(s => !s)} style={{ background: saved ? "#FFF0F0" : "none", border: `1.5px solid ${saved ? "#E14141" : "#E8E5E0"}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: saved ? "#E14141" : "#999990", padding: "8px 14px", borderRadius: 100, transition: "all 0.2s" }}>
+              <button className="wishlist-base" onClick={async () => {
+                if (!currentUser) { navigate('/login'); return; }
+                if (saved) {
+                  await supabase.from('saved_projects').delete()
+                    .eq('user_id', currentUser.id).eq('project_id', id);
+                  setSaved(false);
+                } else {
+                  await supabase.from('saved_projects').insert({ user_id: currentUser.id, project_id: id });
+                  setSaved(true);
+                }
+              }} style={{ background: saved ? "#FFF0F0" : "none", border: `1.5px solid ${saved ? "#E14141" : "#E8E5E0"}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: saved ? "#E14141" : "#999990", padding: "8px 14px", borderRadius: 100, transition: "all 0.2s" }}>
                 <HeartIcon filled={saved} /> {saved ? "Saved" : "Save"}
               </button>
             </div>
 
-            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 42, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: 16 }}>
+            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 33, fontWeight: 700, lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: 16 }}>
               {project.title}
             </h1>
-            <p style={{ fontSize: 16, fontWeight: 400, lineHeight: 1.75, color: "#333", marginBottom: 36, whiteSpace: "pre-wrap" }}>
+            <p style={{ fontSize: 16, fontWeight: 400, lineHeight: 1.75, color: "#333", marginBottom: 36, whiteSpace: "pre-wrap", wordBreak: "break-word", overflowWrap: "anywhere" }}>
               {project.content}
             </p>
 
@@ -278,9 +317,9 @@ export default function ProjectSpecifics() {
             <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "#999990", marginBottom: 14 }}>
               Tech Stack
             </p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {techStacksArray.length > 0 ? techStacksArray.map((tech, idx) => (
-                <StackItem key={idx} name={tech} />
+                <StackItem key={idx} techId={tech} />
               )) : <span style={{ fontSize: 13, color: "#999" }}>Not specified</span>}
             </div>
 
@@ -289,7 +328,10 @@ export default function ProjectSpecifics() {
                 <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#E14141", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>
                   {authorName.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ fontSize: 14, color: "#555", fontWeight: 500 }}>Led by <strong style={{ color: "#111" }}>{authorName}</strong></span>
+                <span style={{ fontSize: 14, color: "#555", fontWeight: 500, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                  Led by <Link to={`/profile/${authorName}`} style={{ color: "#111", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 2 }}>{authorName}</Link>
+                  {isProfessor && <FacultyBadge label="Faculty" />}
+                </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 12, color: "#999990" }}>Posted <strong style={{ fontWeight: 500, color: "#444" }}>{new Date(project.created_at).toLocaleDateString()}</strong></span>

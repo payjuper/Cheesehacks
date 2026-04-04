@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { supabase } from "../../supabaseClient";
 
-const MAX_DESC = 280;
+const MAX_DESC = 2000;
 
 export default function SectionBasics({ title, setTitle, desc, setDesc, previews, setPreviews }) {
   const fileRef = useRef();

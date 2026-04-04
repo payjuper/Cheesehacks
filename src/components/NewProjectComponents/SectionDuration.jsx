@@ -1,4 +1,14 @@
 export default function SectionDuration({ startDate, setStartDate, endDate, setEndDate }) {
+  const today = new Date().toISOString().split("T")[0];
+  const maxStart = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const maxEnd = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+  const handleStartChange = (e) => {
+    const val = e.target.value;
+    setStartDate(val);
+    if (endDate && endDate <= val) setEndDate("");
+  };
+
   return (
     <div className="form-section">
       <div className="section-header">
@@ -15,7 +25,9 @@ export default function SectionDuration({ startDate, setStartDate, endDate, setE
             type="date"
             className="field-input"
             value={startDate}
-            onChange={e => setStartDate(e.target.value)}
+            min={today}
+            max={maxStart}
+            onChange={handleStartChange}
           />
         </div>
         <span style={{ marginTop: '24px', color: 'var(--muted)' }}>→</span>
@@ -25,6 +37,8 @@ export default function SectionDuration({ startDate, setStartDate, endDate, setE
             type="date"
             className="field-input"
             value={endDate}
+            min={startDate || today}
+            max={maxEnd}
             onChange={e => setEndDate(e.target.value)}
           />
         </div>

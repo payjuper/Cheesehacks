@@ -16,7 +16,7 @@ export const style = `
 
   /* ── Topbar ── */
   .np-topbar { padding: 36px 48px 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  .np-topbar-left h1 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .np-topbar-left h1 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
   .np-topbar-left p { margin-top: 6px; font-size: 14px; font-weight: 300; color: var(--muted); }
   .np-topbar-actions { display: flex; gap: 10px; align-items: center; }
 
@@ -50,6 +50,8 @@ export const style = `
     transition: all 0.2s; flex-shrink: 0;
   }
   .step.done .step-dot { border-color: var(--red); background: var(--red); color: #fff; }
+  .step.error { color: #f87171; }
+  .step.error .step-dot { border-color: #f87171; background: #fff0f0; color: #f87171; }
   .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 10px; min-width: 24px; }
   .step-line.done { background: var(--red); opacity: 0.4; }
 
@@ -76,7 +78,7 @@ export const style = `
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 700; color: var(--muted); flex-shrink: 0;
   }
-  .section-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
   .section-sub { font-size: 12px; font-weight: 300; color: var(--muted); margin-top: 2px; }
 
   /* ── Fields ── */
@@ -240,20 +242,59 @@ export const PRESET_TAGS = [
 ];
 
 export const ALL_TECH = [
-  { id: "python",     name: "Python",     color: "#3572A5" },
-  { id: "react",      name: "React",      color: "#61DAFB" },
-  { id: "nodejs",     name: "Node.js",    color: "#539E43" },
-  { id: "fastapi",    name: "FastAPI",    color: "#009688" },
-  { id: "tensorflow", name: "TensorFlow", color: "#FF6F00" },
-  { id: "pytorch",    name: "PyTorch",    color: "#EE4C2C" },
-  { id: "docker",     name: "Docker",     color: "#2496ED" },
-  { id: "pandas",     name: "Pandas",     color: "#150458" },
-  { id: "postgres",   name: "Postgres",   color: "#336791" },
-  { id: "mongodb",    name: "MongoDB",    color: "#47A248" },
-  { id: "typescript", name: "TypeScript", color: "#3178C6" },
-  { id: "rust",       name: "Rust",       color: "#DEA584" },
-  { id: "go",         name: "Go",         color: "#00ACD7" },
-  { id: "vue",        name: "Vue",        color: "#42B883" },
-  { id: "nextjs",     name: "Next.js",    color: "#000000" },
-  { id: "graphql",    name: "GraphQL",    color: "#E10098" },
+  // Frontend
+  { id: "javascript",   name: "JavaScript",   color: "#F7DF1E" },
+  { id: "typescript",   name: "TypeScript",   color: "#3178C6" },
+  { id: "react",        name: "React",        color: "#61DAFB" },
+  { id: "vue",          name: "Vue",          color: "#42B883" },
+  { id: "nextjs",       name: "Next.js",      color: "#000000" },
+  { id: "angular",      name: "Angular",      color: "#DD0031" },
+  { id: "svelte",       name: "Svelte",       color: "#FF3E00" },
+  { id: "tailwind",     name: "Tailwind CSS", color: "#06B6D4" },
+  // Backend
+  { id: "nodejs",       name: "Node.js",      color: "#539E43" },
+  { id: "express",      name: "Express.js",   color: "#000000" },
+  { id: "java",         name: "Java",         color: "#E11D2C" },
+  { id: "spring",       name: "Spring",       color: "#6DB33F" },
+  { id: "python",       name: "Python",       color: "#3572A5" },
+  { id: "django",       name: "Django",       color: "#092E20" },
+  { id: "flask",        name: "Flask",        color: "#000000" },
+  { id: "fastapi",      name: "FastAPI",      color: "#009688" },
+  { id: "ruby",         name: "Ruby",         color: "#CC342D" },
+  { id: "rails",        name: "Ruby on Rails",color: "#CC0000" },
+  { id: "php",          name: "PHP",          color: "#777BB4" },
+  { id: "laravel",      name: "Laravel",      color: "#FF2D20" },
+  { id: "cpp",          name: "C++",          color: "#00599C" },
+  { id: "csharp",       name: "C#",           color: "#512BD4" },
+  { id: "go",           name: "Go",           color: "#00ACD7" },
+  { id: "rust",         name: "Rust",         color: "#DEA584" },
+  { id: "scala",        name: "Scala",        color: "#DC322F" },
+  // ML / AI
+  { id: "tensorflow",   name: "TensorFlow",   color: "#FF6F00" },
+  { id: "pytorch",      name: "PyTorch",      color: "#EE4C2C" },
+  { id: "pandas",       name: "Pandas",       color: "#150458" },
+  // Database
+  { id: "mysql",        name: "MySQL",        color: "#4479A1" },
+  { id: "postgres",     name: "PostgreSQL",   color: "#336791" },
+  { id: "mongodb",      name: "MongoDB",      color: "#47A248" },
+  { id: "redis",        name: "Redis",        color: "#DC382D" },
+  { id: "graphql",      name: "GraphQL",      color: "#E10098" },
+  { id: "firebase",     name: "Firebase",     color: "#FFCA28" },
+  { id: "elasticsearch",name: "Elasticsearch",color: "#005571" },
+  // DevOps / Cloud
+  { id: "aws",          name: "AWS",          color: "#FF9900" },
+  { id: "docker",       name: "Docker",       color: "#2496ED" },
+  { id: "kubernetes",   name: "Kubernetes",   color: "#326CE5" },
+  { id: "git",          name: "Git",          color: "#F05032" },
+  { id: "linux",        name: "Linux",        color: "#FCC624" },
+  { id: "terraform",    name: "Terraform",    color: "#7B42BC" },
+  // Mobile
+  { id: "swift",        name: "Swift",        color: "#FA7343" },
+  { id: "kotlin",       name: "Kotlin",       color: "#7F52FF" },
+  { id: "flutter",      name: "Flutter",      color: "#02569B" },
+  { id: "reactnative",  name: "React Native", color: "#61DAFB" },
+  // Design / Game
+  { id: "figma",        name: "Figma",        color: "#F24E1E" },
+  { id: "unity",        name: "Unity",        color: "#000000" },
+  { id: "unreal",       name: "Unreal Engine",color: "#0D1117" },
 ];

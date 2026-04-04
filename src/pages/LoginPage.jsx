@@ -26,7 +26,7 @@ const style = `
     position: fixed; top: 28px; left: 32px;
     display: flex; align-items: center; gap: 10px; z-index: 100;
   }
-  .login-logo-text { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: #fff; }
+  .login-logo-text { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
 
   .login-left {
     flex: 1; position: relative;
@@ -57,7 +57,7 @@ const style = `
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   }
 
-  .login-heading { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; color: #111; }
+  .login-heading { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.1; color: #111; }
   .login-sub { font-size: 13px; font-weight: 300; color: var(--muted); margin-top: 8px; line-height: 1.6; }
   .login-divider { height: 1px; background: var(--border); margin: 28px 0; }
 

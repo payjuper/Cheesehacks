@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { TAG_CLASS } from "./styles";
+import { TECH_ICON, TECH_COLOR } from "../techIcons";
+import FacultyBadge from "../FacultyBadge";
 
-export default function ProjectCard({ project, animDelay }) {
+export default function ProjectCard({ project, animDelay, isSaved = false, onToggleSave }) {
   const [imgIdx, setImgIdx] = useState(0);
-  const [imgOpacity, setImgOpacity] = useState(1);
-  const [saved, setSaved] = useState(false);
   const timerRef = useRef(null);
 
   const images = project.images ?? [];
   const stack = project.stack ?? [];
   const contributors = project.contributors ?? [];
   const tags = project.tags ?? [];
+  const isProfessor = project.isAuthorProfessor ?? false;
 
   useEffect(() => {
     images.forEach(url => {
@@ -23,21 +24,13 @@ export default function ProjectCard({ project, animDelay }) {
   const handleMouseEnter = useCallback(() => {
     if (images.length < 2) return;
     timerRef.current = setInterval(() => {
-      setImgOpacity(0);
-      setTimeout(() => {
-        setImgIdx(prev => (prev + 1) % images.length);
-        setImgOpacity(1);
-      }, 220);
+      setImgIdx(prev => (prev + 1) % images.length);
     }, 1000);
   }, [images]);
 
   const handleMouseLeave = useCallback(() => {
     clearInterval(timerRef.current);
-    setImgOpacity(0);
-    setTimeout(() => {
-      setImgIdx(0);
-      setImgOpacity(1);
-    }, 220);
+    setImgIdx(0);
   }, []);
 
   useEffect(() => () => clearInterval(timerRef.current), []);
@@ -45,17 +38,18 @@ export default function ProjectCard({ project, animDelay }) {
   const toggleSave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setSaved(s => !s);
+    onToggleSave?.(project.id);
   };
 
   return (
     <Link
   to={`/project/${project.id}`}
   className="p-card"
-  style={{ 
+  style={{
     animationDelay: `${animDelay}s`,
     width: '50vw',
     height: '17vw',
+    ...(isProfessor ? { borderColor: '#FDE68A', boxShadow: '0 2px 14px rgba(180,83,9,0.08)' } : {}),
   }}
   onMouseEnter={handleMouseEnter}
   onMouseLeave={handleMouseLeave}
@@ -69,18 +63,22 @@ export default function ProjectCard({ project, animDelay }) {
               <polyline points="21 15 16 10 5 21"/>
             </svg>
           </div>
-          {images[imgIdx] && (
+          {images.map((url, i) => (
             <img
-              src={images[imgIdx]}
+              key={url}
+              src={url}
               alt={project.title}
-              style={{ opacity: imgOpacity }}
+              style={{ opacity: i === imgIdx ? 1 : 0 }}
             />
-          )}
+          ))}
         </div>
         <div className="tags">
-          {tags.map(tag => (
-            <span key={tag} className={`tag ${TAG_CLASS[tag] || ""}`}>{tag}</span>
+          {tags.slice(0, 3).map(tag => (
+            <span key={tag} className={`tag ${TAG_CLASS[tag] || ""}`}>{({ ai:"AI", ml:"ML", data:"Data Science", web:"Web", sec:"Security", iot:"IoT", AI:"AI", ML:"ML", "Data Science":"Data Science", Web:"Web", Security:"Security", IoT:"IoT" })[tag] || tag}</span>
           ))}
+          {tags.length > 3 && (
+            <span className="tag-overflow">+{tags.length - 2}</span>
+          )}
         </div>
       </div>
 <div className="card-content">
@@ -96,7 +94,7 @@ export default function ProjectCard({ project, animDelay }) {
 {project.end_date ? new Date(project.end_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?'}
               </span>
             )}
-            <button className={`wl-btn${saved ? " saved" : ""}`} onClick={toggleSave}>
+            <button className={`wl-btn${isSaved ? " saved" : ""}`} onClick={toggleSave}>
               <svg viewBox="0 0 24 24">
                 <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
               </svg>
@@ -109,12 +107,32 @@ export default function ProjectCard({ project, animDelay }) {
 
         {/* Floor 2 — Tech Stack */}
         <div className="stack-row">
-          {stack.map(s => (
-            <div key={s.name} className="stack-item">
-              {s.icon && <div className="sicon">{s.icon}</div>}
-              {s.name}
-            </div>
-          ))}
+          {(() => {
+            const BUDGET = 70;
+            let used = 0;
+            const visible = [];
+            let hidden = 0;
+            for (const s of stack) {
+              const cost = s.name.length;
+              if (used + cost > BUDGET && visible.length > 0) { hidden++; }
+              else { visible.push(s); used += cost; }
+            }
+            return (
+              <>
+                {visible.map(s => {
+                  const Icon = TECH_ICON[s.name];
+                  const color = TECH_COLOR[s.name] ?? "#999";
+                  return (
+                    <div key={s.name} className="stack-item">
+                      {Icon ? <Icon size={13} color={color} style={{ flexShrink: 0 }} /> : null}
+                      {s.name}
+                    </div>
+                  );
+                })}
+                {hidden > 0 && <div className="stack-item" style={{ color: "var(--muted)", borderStyle: "dashed" }}>+{hidden}</div>}
+              </>
+            );
+          })()}
         </div>
 
         {/* Floor 3 — Contributors */}
@@ -135,8 +153,14 @@ export default function ProjectCard({ project, animDelay }) {
                 </div>
               ))}
             </div>
-            <span className="contrib-label">
-              {project.lead ? `Led by ${project.lead}` : "No lead assigned"}
+            <span className="contrib-label" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              {project.lead ? (
+                <>
+                  Led by{" "}
+                  <Link to={`/profile/${project.lead}`} onClick={e => e.stopPropagation()} style={{ color: "inherit", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}>{project.lead}</Link>
+                  {isProfessor && <FacultyBadge label="Faculty" />}
+                </>
+              ) : "No lead assigned"}
             </span>
           </div>
           <div className="go-btn">
